@@ -1,10 +1,10 @@
       subroutine ctypes (ilwork)
 
-      parameter (maxseg = 30000)
-
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+
+      parameter (maxseg = 30000)
 
       integer  sizeofdouble,sizeofInt64
 

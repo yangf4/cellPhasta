@@ -61,6 +61,9 @@
 #define MAXSURF  1000  
 #define MAXTS   100
 #define MAXTOP   6
+#define MAXTOPIF 12
+#define MAXMAT  6
+#define MAXPROP 10
 #define MAXQPT   125
 #define MAXSH    32
 #define NSD      3
@@ -85,6 +88,9 @@
 #define five   5.0000000000000000000000000000000d0
 #define pi   3.1415926535897932384626433832795d0
 #define inv1024sq 9.5367431640625e-7
+
+#define ieos_ideal_gas 1
+#define ieos_liquid_1  2
 
 #ifdef __cplusplus
 extern "C" {
@@ -235,6 +241,7 @@ extern "C" {
     int numnp;
     int numel;
     int numelb;
+    int numelif;
     int numpbc;
     int nen;
     int nfaces;
@@ -249,10 +256,12 @@ extern "C" {
     int ichem;
     int iRK;
     int nedof;
+    int ndofelas;
     int nshg;
     int nnz;
     int istop;
     int nflow;
+    int nelas;
     int nnz_tot;
     int idtn;
     int ncorpsize;
@@ -326,9 +335,12 @@ extern "C" {
   extern struct { 
     int nshape;
     int nshapeb;
+    int nshapeif;
     int maxshb;
     int nshl;
     int nshlb;
+    int nshl0;
+    int nshl1;
     int nfath;
     int ntopsh;
     int nsonmax;
@@ -353,6 +365,7 @@ extern "C" {
     int nenb;
     int nelblk;
     int nelblb;
+    int nelblif;
     int ndofl;
     int nsymdl;
     int nenl;
@@ -360,6 +373,7 @@ extern "C" {
     int nenbl;
     int intind;
     int mattyp;
+    int iftpid[MAXBLK]; // Interface toplogical id. Holds the e0, e1 configuaration.
   } elmpar ;
 
   extern struct { 
@@ -462,10 +476,14 @@ extern "C" {
   } itrpar ;
 
   extern struct { 
-    double datmat[MAXTS][7][3];
-    int matflg[MAXTS][6];
+    double datmat[MAXTS][MAXPROP][MAXMAT];
+    int matflg[MAXTS][MAXMAT];
+    int mat_tag[MAXTS][MAXMAT];
+    int mat_eos[MAXTS][MAXMAT];
+    double mat_prop[MAXTS][MAXPROP][MAXMAT];
     int nummat;
     int mexist;
+    double datelas[2][1];
   } matdat ;
 
   extern struct { 
@@ -606,7 +624,7 @@ extern "C" {
   } title ;
 
   extern struct {
-    int intg[MAXTS][2];
+    int intg[MAXTS][3];
   }intdat;
 
   extern struct {

@@ -8,13 +8,16 @@ c re-declared here, in a consistant block.
 c
 c Zdenek Johan, Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
+c
+      use number_def_m
+      use matdat_def_m
 
 	IMPLICIT REAL*8 (a-h,o-z)
 c
 c.... parameters  IF YOU CHANGE THES YOU HAVE TO CHANGE THEM IN
 c                  common_c.h ALSO
 c
-        parameter     ( MAXBLK = 50000, MAXTS = 100)
+        parameter     ( MAXBLK = 50000)
         parameter     ( MAXSH = 32, NSD = 3 , NSDSQ = 9)
 c
 c  The five types of region topology are  1= Tet, 2=Hex, 3= Wedge (tri-start),
@@ -23,7 +26,32 @@ c
 c  The two types of face topology are  1= tri, 2=quad
 c
         parameter     ( MAXTOP = 6, MAXSURF=1000 )
- 
+c
+c
+c...  The twelve different topological interface region are:
+c
+        parameter     ( MAXTOPIF = 12 )
+c
+c  sharing a tri face:
+c
+c  1= tet-tet 
+c  2= tet-pyramid
+c  3= tet-wedge
+c  4= pyramid-pyramid
+c  5= pyramid-wedge
+c  6= wedge-wedge
+c
+c  sharing a quad face:
+c
+c  7= pyramid-pyramid
+c  8= pyramid-wedge
+c  9= pyramid-hex
+c  10= wedge-wedge
+c  11= wedge-hex
+c  12= hex-hex
+c
+
+c
 c the common block nomodule holds all the things which have been removed
 c from different modules
      
@@ -91,9 +119,13 @@ c.... common blocks for hierarchic basis functions
 c
       common /intpt/  Qpt (MAXTOP ,4,MAXQPT), Qwt (MAXTOP ,MAXQPT), 
      &                Qptb(MAXTOP,4,MAXQPT),  Qwtb(MAXTOP,MAXQPT), 
+     &                Qptif0(MAXTOPIF,4,MAXQPT), Qwtif0(MAXTOPIF,MAXQPT),
+     &                Qptif1(MAXTOPIF,4,MAXQPT), Qwtif1(MAXTOPIF,MAXQPT),
      &                nint(MAXTOP),           nintb(MAXTOP),
-     &                ngauss,                 ngaussb,   intp,
-     &                   maxnint
+     &                nintif0(MAXTOPIF),       nintif1(MAXTOPIF),
+     &                ngauss,                 ngaussb,        ngaussif,
+     &                intp,
+     &                maxnint
  
 c nsrflist is a binary switch that tells us if a given srfID should be
 c included in the consistent flux calculation.  It starts from zero
@@ -110,7 +142,9 @@ c
 c
         common /astore/ a(100000)
 c
-        common /blkdat/ lcblk(10,MAXBLK+1),      lcblkb(10,MAXBLK+1)
+        common /blkdat/ lcblk  (10,MAXBLK+1),
+     &                  lcblkb (10,MAXBLK+1),
+     &                  lcblkif(14,MAXBLK+1)
 c
         common /mbndnod/ mnodeb(9,8,3)
 c
@@ -120,10 +154,12 @@ c
      &                  nshg,   nnz,    nflow,
      &                  nfath, ncorpsize, iownnodes, usingpetsc
 
-        common /conpar/ numnp,  numel,  numelb, numpbc, nen,    nfaces,
-     &                  numflx, ndof,   iALE,   icoord, navier,
-     &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
-     &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
+        common /conpar/ numnp,    numel,  numelb, numelif,
+     &                  numpbc,   nen,    nfaces,
+     &                  numflx,   ndof,   iALE,   icoord, navier,
+     &                  irs,      iexec,  necho,  ichem,  iRK,    nedof,
+     &                  ndofelas, nshg,   nnz,    istop,  nflow,  nelas, 
+     &                  nnz_tot,  idtn,
      &                  ncorpsize, iownnodes, usingpetsc
 
 c...........................................................................
@@ -168,8 +204,9 @@ c
      &                   ivconstraint, iExpLSSclr1, iExpLSSclr2
 
 c 
-        common /shpdat/ nshape, nshapeb, maxshb,
-     &                  nshl, nshlb,nfath,  ntopsh,  nsonmax
+        common /shpdat/ nshape, nshapeb, nshapeif, maxshb,
+     &                  nshl, nshlb, nshl0, nshl1,      ! nshl0,1 for interface
+     &                  nfath,  ntopsh,  nsonmax
 c
         common /datpnt/ mshp,   mshgl,  mwght,  mshpb,  mshglb, mwghtb,
      &                  mmut,   mrhot,  mxst
@@ -177,8 +214,12 @@ c
         common /melmcat/ mcsyst, melCat, nenCat(8,3),    nfaCat(8,3)
 c
         common /elmpar/ lelCat, lcsyst, iorder, nenb,   
-     &                  nelblk, nelblb, ndofl,  nsymdl, nenl,   nfacel,
-     &                  nenbl,  intind, mattyp
+     &                  nelblk, nelblb, nelblif,
+     &                  ndofl,  nsymdl, nenl,   nfacel,
+     &                  nenl0,  nenl1,  lcsyst0, lcsyst1,
+     &                  nenbl,  intind, mattyp,
+     &                  mattyp0, mattyp1, 
+     &                  iftpid(MAXBLK)
 c
 
         integer EntropyPressure
@@ -198,7 +239,7 @@ c
      &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2), 
      &                  leslib,     svLSFlag,   svLSType
 c
-        common /intdat/ intg(2,MAXTS),  intpt(3),       intptb(3)
+        common /intdat/ intg(3,MAXTS),  intpt(3),       intptb(3)
 c
         common /mintpar/ indQpt(3,3,4),  numQpt(3,3,4),
      &                  intmax
@@ -225,9 +266,6 @@ c
      &                  Rs(5),  cps(5), cvs(5), h0s(5), Trot(5),sigs(5),
      &                  Tvib(5),g0s(5), dofs(5),ithm
 c
-        logical         mexist
-        common /matdat/ datmat(3,7,MAXTS),      matflg(6,MAXTS),
-     &                  nummat,                 mexist
 
         integer input_mode, output_mode
         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
@@ -279,26 +317,6 @@ c
         parameter     ( machin = 'RS/6000 ' )
         parameter     ( machfl = 4 )
  
-        parameter 
-     &           ( zero   = 0.0000000000000000000000000000000d0,
-     &             pt125  = 0.1250000000000000000000000000000d0,
-     &             pt25   = 0.2500000000000000000000000000000d0,
-     &             pt33   = 0.3333333333333333333333333333333d0,
-     &             pt39   = 0.3968502629920498686879264098181d0,
-     &             pt5    = 0.5000000000000000000000000000000d0,
-     &             pt57   = 0.5773502691896257645091487805020d0,
-     &             pt66   = 0.6666666666666666666666666666667d0,
-     &             pt75   = 0.7500000000000000000000000000000d0,
-     &             one    = 1.0000000000000000000000000000000d0,
-     &             sqt2   = 1.4142135623730950488016887242097d0,
-     &             onept5 = 1.5000000000000000000000000000000d0,
-     &             two    = 2.0000000000000000000000000000000d0,
-     &             three  = 3.0000000000000000000000000000000d0,
-     &             four   = 4.0000000000000000000000000000000d0,
-     &             five   = 5.0000000000000000000000000000000d0,
-     &             pi     = 3.1415926535897932384626433832795d0,
-     &             inv1024sq = 9.5367431640625e-7)
-
 c
 c----------------------------------------------------------------------
 c
@@ -333,6 +351,7 @@ c.... common /blkdat/   : blocking data
 c
 c lcblk  (10,MAXBLK+1) : blocking data for the interior elements
 c lcblkb (10,MAXBLK+1) : blocking data for the boundary elements
+c lcblkif (14,MAXBLK+1) : blocking data for the interface elements
 c
 c----------------------------------------------------------------------
 c
@@ -401,6 +420,7 @@ c maxsh         : total number integration points
 c maxshb        : total number integration points of boundary elements
 c nelblk        : number of element blocks
 c nelblb        : number of boundary element blocks
+c nelblif       : number of interface element blocks
 c ndofl         : number of degrees of freedom (for current block)
 c nsymdl        : number of d.o.f for symm. storage (for current block)
 c nenl          : number of element nodes (for current block)
@@ -409,6 +429,7 @@ c nenbl         : number of boundary element nodes
 c intind        : integration data index
 c nintg         : number of integration points
 c mattyp        : material type ( = 0 for fluid; = 1 for solid )
+c iftpid(MAXBLK): holds the interface topological combination
 c
 c----------------------------------------------------------------------
 c
@@ -467,8 +488,10 @@ c Qptb (2,MAXQPT)  : boundary element quad. pnts.
 c Qwtb (MAXQPT)    : boundary element quad. weights
 c nshape           : number of interior element shape functions
 c nshapeb          :   "    "  boundary  "        "       "
+c nshapeif         :   "    "  interface "        "       "
 c ngauss           : number of interior element integration points
 c ngaussb          :   "    "  boundary  "        "           "
+c ngaussif         :   "    "  interface "        "           "
 c----------------------------------------------------------------------
 c
 c.... common /intpar/   : integration parameters
