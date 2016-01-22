@@ -1,6 +1,7 @@
         subroutine gendat (y,       ac,       x,      iBC,     BC,
      &                     iper,    ilwork,
      &                     shp,     shgl,    shpb,    shglb,
+     &                     shpif0,  shpif1,  shgif0,  shgif1,
      &                     ifath,   velbar,   nsons ) 
 c
 c----------------------------------------------------------------------
@@ -16,6 +17,8 @@ c
         use dtnmod
         use pointer_data
         use wallData            ! give access to wnorm, findWallNOrm
+        use genshp_m
+
         include "common.h"
         include "mpif.h"
 
@@ -31,10 +34,10 @@ c
 c
 c.... shape function declarations
 c     
-        dimension shp(MAXTOP,maxsh,MAXQPT),  
-     &            shgl(MAXTOP,nsd,maxsh,MAXQPT), 
-     &            shpb(MAXTOP,maxsh,MAXQPT),
-     &            shglb(MAXTOP,nsd,maxsh,MAXQPT) 
+        real*8, dimension(maxtop,  maxsh,maxqpt), intent(out) :: shp, shpb
+        real*8, dimension(maxtopif,maxsh,maxqpt), intent(out) :: shpif0, shpif1
+        real*8, dimension(maxtop,  nsd,maxsh,maxqpt), intent(out) :: shgl, shglb
+        real*8, dimension(maxtopif,nsd,maxsh,maxqpt), intent(out) :: shgif0, shgif1
 c
 c  stuff for dynamic model s.w.avg and wall model
 c
@@ -84,12 +87,15 @@ c
 c
 c.... prepare periodic boundary conditions
 c
+c HARDCODED PERIODIC BC
+c The following loop was commented 
+c until the periodic BC is taken care of for DG_interface...
         do i = 1,nshg
-          if (iper(i) .ne. 0) then
-            nshg0 = nshg0 - 1
-          else
+c          if (iper(i) .ne. 0) then
+c            nshg0 = nshg0 - 1
+c          else
             iper(i) = i
-          endif
+c          endif
         enddo
 c
 c.... ---------------------->  Interior Elements  <--------------------
@@ -218,6 +224,13 @@ c
          call setSPEBC(numnp,nsd) 
          call eqn_plane(point2x, iBC)
       endif
+c
+c.... ---------------------->  Interface Elements  <--------------------
+c
+c... calculate interface element shape functions
+c
+        call genshpif (shpif0, shpif1, shgif0, shgif1)
+c
 c
 c.... --------------------->  Initial Conditions  <--------------------
 c

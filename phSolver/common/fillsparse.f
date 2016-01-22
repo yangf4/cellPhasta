@@ -231,6 +231,110 @@ c
       return
       end
 
+      subroutine fillsparse_if
+     &  ( lhsk,
+     &    ienif0,ienif1,
+     &    col,row,
+     &    egmass,
+     &    nflow,nshg,nnz,nnz_tot)
+c
+        implicit none
+c
+        real*8, intent(inout) :: lhsK(nflow*nflow,nnz_tot)
+        integer, dimension(:,:), pointer, intent(in) :: ienif0,ienif1
+        integer, intent(in) :: col(nshg+1), row(nnz*nshg)
+        real*8, dimension(:,:,:), pointer, intent(in) :: egmass
+        integer, intent(in) :: nflow,nshg,nnz,nnz_tot
+c
+        integer :: e,a,b,i,c,n,r,s,k,g,t,f
+        integer :: npro,nshl0,nshl1
+        integer :: sparseloc
+c
+        npro = size(ienif0,1)
+        nshl0 = size(ienif0,2)
+        nshl1 = size(ienif1,2)
+c
+        do e = 1,npro
+          do a = 1,nshl0
+            i = ienif0(e,a)
+            c = col(i)
+            n = col(i+1) - c
+            r = (a-1)*nflow
+            do b = 1,nshl1
+              s = (b-1)*nflow
+              k = sparseloc( row(c), n, ienif1(e,b) ) + c-1
+              do g = 1,nflow
+                t = (g-1)*nflow
+                do f = 1,nflow
+c
+                  lhsK(t+f,k) = lhsK(t+f,k) + EGmass(e,r+f,s+g)
+c
+                enddo
+              enddo
+            enddo
+          enddo
+        enddo        
+c
+      end subroutine fillsparse_if
+c
+        subroutine fillsparseElas(   iens,   Estiff,	lhsK,
+     &			             row,    col)
+c
+c-----------------------------------------------------------
+c
+c This routine fills up the spasely stored LHS mesh-elastic
+c stiffness matrix. 
+c
+c-----------------------------------------------------------
+c
+	include "common.h"
+c
+ 	real*8	Estiff(npro,ndofelas,ndofelas)
+        integer	ien(npro,nshl),	col(nshg+1), row(nnz*nshg)
+        real*8 lhsK(nelas*nelas,nnz_tot)
+c
+        integer aa, b, c, e, i, k, n, n1
+        integer f, g, r, s, t
+c
+	integer sparseloc
+c
+	integer iens(npro,nshl)
+c
+c prefer to show explicit absolute value needed for cubic modes and
+c higher rather than inline abs on pointer as in past versions
+c iens is the signed ien array ien is unsigned
+c
+	ien=abs(iens)
+c
+c.... Accumulate the lhsK
+c
+	do e = 1, npro
+	    do aa = 1, nshl
+		i = ien(e,aa)
+		c = col(i)
+		n = col(i+1) - c
+		r = (aa-1)*nelas
+		do b = 1, nshl
+		    s = (b-1)*nelas
+                    k = sparseloc( row(c), n, ien(e,b) ) + c-1
+c
+		    do g = 1, nelas
+		       t = (g-1)*nelas
+		       do f = 1, nelas
+c
+			  lhsK(t+f,k) = lhsK(t+f,k) + Estiff(e,r+f,s+g)
+c
+                       enddo
+                   enddo
+		enddo
+	    enddo
+	enddo
+c
+c.... end
+c
+	return
+	end subroutine fillsparseElas
+c
       integer    function sparseloc( list, n, target )
 
 c-----------------------------------------------------------

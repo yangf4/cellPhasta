@@ -453,3 +453,90 @@ c
 c
         end
 
+        subroutine rstatElas (res, ilwork)
+c
+c----------------------------------------------------------------------
+c
+c This subroutine calculates the statistics of the residual.
+c
+c input:
+c  res   (nshg,nelas)   : preconditioned residual for mesh-elastic solve
+c
+c output:
+c  The time step, cpu-time and entropy-norm of the residual
+c     are printed in the file HISTOR.DAT.
+c  
+c----------------------------------------------------------------------
+c
+        include "common.h"
+        include "mpif.h"
+        include "auxmpi.h"
+c
+        dimension res(nshg,nelas)
+        dimension rtmp(nshg), nrsmax(1), ilwork(nlwork)
+
+	ttim(68) = ttim(68) - secs(0.0)
+
+        if (numpe == 1) nshgt=nshg   ! global = this processor
+c
+c.... ----------------------->  Convergence  <-------------------------
+c
+c.... compute the maximum residual and the corresponding node number
+c
+        rtmp = zero
+        do i = 1, nelas
+          rtmp = rtmp + res(:,i) * res(:,i)
+        enddo
+ 
+        call sumgat (rtmp, 1, resnrm, ilwork)
+      
+        resmaxl = maxval(rtmp)
+
+        irecvcount = 1
+        resvec = resmaxl
+        if (numpe > 1) then
+        call MPI_ALLREDUCE (resvec, resmax, irecvcount,
+     &                    MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD,
+     &                    ierr)
+        else
+          resmax=resmaxl
+        endif
+        nrsmax = maxloc(rtmp)
+c
+c.... approximate the number of entries
+c
+        totres = resnrm / float(nshgt)
+        totres = sqrt(totres)
+        resmax = sqrt(resmax)
+        if (resfrt .eq. zero) resfrt = totres
+        jtotrs = int  ( 10.d0 * log10 ( totres / resfrt ) )
+        jresmx = int  ( 10.d0 * log10 ( resmax / totres ) )
+c
+c.... get the CPU-time
+c
+        rsec=TMRC()
+        cputme = (rsec-ttim(100))
+c
+c.... output the result
+c
+        if (myrank .eq. master) then
+          print 2000,        lstep+1, cputme, totres, jtotrs, nrsmax,
+     &                     jresmx, lGMRES,  iKs, ntotGM
+          write (ihist,2000) lstep+1, cputme, totres, jtotrs, nrsmax,
+     &                     jresmx, lGMRES,  iKs, ntotGM
+          call flush(ihist)
+        endif
+
+	ttim(68) = ttim(68) + secs(0.0)
+
+c
+c.... return
+c
+        return
+c
+1000    format(1p,i6,5e13.5)
+2000    format(1p,i6,e10.3,e10.3,3x,'(',i4,')',3x,'<',i6,'|',i4,'>',
+     &         ' [',i3,'-',i3,']',i10)
+c
+        end
+

@@ -2,6 +2,7 @@
      &                   iBC,       BC,         
      &                   iper,      ilwork,     shp,       
      &                   shgl,      shpb,       shglb,
+     &                   shpif0,    shpif1,     shgif0,     shgif1,
      &                   ifath,     velbar,     nsons ) 
 c
 c----------------------------------------------------------------------
@@ -36,6 +37,7 @@ c
       use turbSA
       use wallData
       use fncorpmod
+c      use mesh_motion_m
 
         include "common.h"
         include "mpif.h"
@@ -55,6 +57,8 @@ c
      &            shgl(MAXTOP,nsd,maxsh,MAXQPT), 
      &            shpb(MAXTOP,maxsh,MAXQPT),
      &            shglb(MAXTOP,nsd,maxsh,MAXQPT) 
+        real*8, dimension(maxtopif,    maxsh,maxqpt) :: shpif0, shpif1
+        real*8, dimension(maxtopif,nsd,maxsh,maxqpt) :: shgif0, shgif1
         real*8   almit, alfit, gamit
         dimension ifath(numnp),    velbar(nfath,ndof),  nsons(nfath)
         real*8 rerr(nshg,10),ybar(nshg,ndof+8) ! 8 is for avg. of square as uu, vv, ww, pp, TT, uv, uw, and vw
@@ -84,6 +88,11 @@ c
         real*8, allocatable, dimension(:,:) :: lhsK
         real*8, allocatable, dimension(:,:) :: EGmass
         real*8, allocatable, dimension(:,:) :: EGmasst
+c
+c.... For mesh-elastic solve
+c
+       real*8  umesh(nshg,nsd),     meshq(numel), 
+     &         disp(numnp, nsd),    elasDy(nshg,nelas)
  
         integer iTurbWall(nshg) 
         real*8 yInlet(3), yInletg(3)
@@ -182,6 +191,14 @@ c
            allocate  (EGmass(numel,nedof*nedof))
         endif
 
+c
+c ... allocate mesh-elastic solve related arrays only if mesh-elastic solve flag/option is ON
+c
+        if (impl(2) .eq. 1) then 
+          meshq = one
+          umesh = zero
+        endif
+c
 c..........................................
         rerr = zero
         ybar(:,1:ndof) = y(:,1:ndof)
@@ -303,6 +320,9 @@ c============ Start the loop of time steps============================c
 !        edamp3=0.05
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
+c
+c            call temp_mesh_motion(x,umesh,time,delt(1),istp,numnp,nsd)
+c
 
          
         if(iramp.eq.1) 
@@ -372,12 +392,28 @@ c.... -----------------------> predictor phase <-----------------------
 c
             call itrPredict(   yold,    acold,    y,   ac )
             call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+c
+c...-------------> HARDCODED <-----------------------
+c
+c            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+      call tempitrBC (y,ac, iBC, BC, iper, ilwork, x, umesh)
+c
+c----------------> END HARDCODE <--------------------
+c
             isclr = zero
             if (nsclr.gt.zero) then
             do isclr=1,nsclr
                call itrBCSclr (y, ac,  iBC, BC, iper, ilwork)
             enddo
             endif
+c
+            if(impl(2).gt.0) then
+c
+c....   need itrPredict equivalent for 'disp'
+c
+               call itrPredictElas(disp)
+            endif
+c
 c
 c.... --------------------> multi-corrector phase <--------------------
 c
@@ -458,7 +494,10 @@ c                        write(*,*) 'lhs=',lhs
      &                       yBrg,          Rcos,          Rsin,
      &                       iper,          ilwork,
      &                       shp,           shgl,
-     &                       shpb,          shglb,         solinc,
+     &                       shpb,          shglb,         
+     &                       shpif0,        shpif1,        shgif0,        shgif1,
+     &                       umesh,
+     &                       solinc,
      &                       rerr)
                     endif
                       else if (mod(impl(1),100)/10 .eq. 2) then ! mfg solve
@@ -499,7 +538,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       rerr)
                      endif
 c     
-                else          ! solve a scalar  (encoded at isclr*10)
+                else if(isolve.lt.10) then ! solve a scalar  (encoded at isclr*10 up till 90)
                      isclr=isolve
                      etol=epstol(isclr+2) ! note that for both epstol and LHSupd 1 is flow 2 temp isclr+2 for scalars
                      ifuncs(isclr+2)  = ifuncs(isclr+2) + 1
@@ -557,10 +596,32 @@ c
      &                    iper,          ilwork,
      &                    shp,           shgl,
      &                    shpb,          shglb, solinc(1,isclr+5))
-                  endif
-c     
-                  endif         ! end of scalar type solve
-c     
+c    
+                  endif  ! endif usingPETSc for scalar
+c
+                  else if(isolve.eq.10) then ! this is a mesh-elastic solve
+c
+                      lhs = 1  
+                      iprec=lhs
+                      ndofelas = nshl * nelas
+c 
+c.... temporally generate iBC and BC
+c
+                     call geniBCElas(x,   iBC,  BC(:,ndof+2:ndof+4),
+     &                               umesh )
+c
+                     call itrBCElas(disp, iBC,  BC(:,ndof+2:ndof+4),
+     &                              iper, ilwork )
+c                         
+c.... call to SolGMRElas ... For mesh-elastic solve
+c
+                     call SolGMRElas (x,          disp,     iBC,  BC,
+     &                       colm,     rowp,       meshq,  
+     &                       a(mHBrg), a(meBrg), 
+     &                       a(myBrg), a(mRcos),  a(mRsin), iper, 
+     &                       ilwork,   shp,       shgl,     elasDy)
+c
+                  endif  ! end of switch for flow or scalar or mesh-elastic solve
 c     
 c.... end of the multi-corrector loop
 c     
@@ -570,14 +631,21 @@ c
                   iupdate=icode/10 ! what to update
                   if(iupdate.eq.0) then !update flow  
                      call itrCorrect ( y, ac, yold, acold, solinc)
-                     call itrBC (y,  ac,  iBC,  BC, iper, ilwork)
+c
+c...-------------> HARDCODED <-----------------------
+c
+c            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+      call tempitrBC (y,ac, iBC, BC, iper, ilwork, x, umesh)
+c
+c----------------> END HARDCODE <--------------------
+c
                      call tnanq(y, 5, 'y_updbc')
 c Elaine-SPEBC
                      if((irscale.ge.0).and.(myrank.eq.master)) then
                         call genscale(y, x, iBC)
 c                       call itrBC (y,  ac,  iBC,  BC, iper, ilwork)
                      endif
-                  else          ! update scalar
+                  else if(iupdate.lt.10) then         ! update scalar
                      isclr=iupdate !unless
                      if(iupdate.eq.nsclr+1) isclr=0
                      call itrCorrectSclr ( y, ac, yold, acold,
@@ -604,7 +672,19 @@ c
                         endif   ! end of volume constraint calculations
                      endif
                      call itrBCSclr (  y,  ac,  iBC,  BC, iper, ilwork)
-                  endif
+                  else if(iupdate.eq.10) then        ! update mesh-elastic
+c
+c.... call itrCorrectElas ... and then itrBCElas ...
+c
+                     call itrCorrectElas(disp, elasDy)
+c
+                     call itrBCElas(disp, iBC, BC(:,ndof+2:ndof+4),
+     &                              iper, ilwork)
+c
+                     call itrCorrectElas(x, disp)
+                     umesh = disp / Delt(1)
+c
+                  endif ! end of switch for flow or scalar or mesh-elastic update
                endif            !end of switch between solve or update
             enddo               ! loop over sequence in step
         if((istop.lt.0).and.(iMoreRANS.lt.5)) then
@@ -624,7 +704,13 @@ c
                almi =almit  
             endif          
             call itrUpdate( yold,  acold,   y,    ac)
-            call itrBC (yold, acold,  iBC,  BC, iper,ilwork)  
+c...-------------> HARDCODED <-----------------------
+c
+c            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+      call tempitrBC (y,ac, iBC, BC, iper, ilwork, x, umesh)
+c
+c----------------> END HARDCODE <--------------------
+c
 c Elaine-SPEBC      
             if((irscale.ge.0).and.(myrank.eq.master)) then
                 call genscale(yold, x, iBC)
@@ -733,6 +819,15 @@ c.. writing ybar field if requested in each restart file
 !    &              shp,           shgl,      shpb,
 !    &              shglb,         nodflx,    ilwork)
                   
+c
+c.... print out the updated mesh and mesh quality for mesh-elastic solve
+c
+               if (impl(2) .eq. 1) then 
+                   call write_field(myrank, 'a', 'coord', 5, 
+     &                              x,      'd',  numnp,  nsd, lstep)
+                   call write_field(myrank, 'a', 'meshQ', 5, 
+     &                              meshq,  'd',  numel,  1,   lstep)
+               endif
                call timer ('Output  ')      !set up the timer
 
                !write the solution and time derivative 
