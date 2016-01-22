@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <vector>
 #include <string>
-//MR CHANGE
+#include <sstream>
 #include <cstring>
-//MR CHANGE END
 
 #include "Input.h"
 #include "common_c.h"
@@ -25,11 +24,19 @@ extern "C" void BC_setVars(		int*, 		int*,
 								double*, 	double*,	double*, 
 								double*		);
 
+void populate_eos_map
+(map<string,int>& eos_map)
+{
+  eos_map.insert(map<string,int>::value_type("ideal_gas", ieos_ideal_gas));
+  eos_map.insert(map<string,int>::value_type("liquid_1",  ieos_liquid_1));
+}
+
 int input_fform(phSolver::Input& inp)
 {
 
   int ierr = 0 ;
   int i,j, n_tmp;
+  map<string,int> eos_map;
 
   try {
     if(workfc.myrank==workfc.master) {
@@ -240,11 +247,13 @@ int input_fform(phSolver::Input& inp)
     if (turbvari.irans<0 && turbvari.iles<0)
       turbvar.DES_SA_hmin=(double)inp.GetValue("DES SA Minimum Edge Length");
 
-    int solflow, solheat , solscalr, ilset;
+    int solflow, solheat , solscalr, ilset, solelas;
     ((string)inp.GetValue("Solve Flow") == "True")? solflow=1:solflow=0;
     ((string)inp.GetValue("Solve Heat") == "True")? solheat=1:solheat=0;
     //for compressible solheat= False so
     if((string)inp.GetValue("Equation of State") == "Compressible") solheat=0;
+    //for mesh-elastic solve
+    ((string)inp.GetValue("Solve Mesh-Elastic") == "True")? solelas=1:solelas=0;
     ilset = (int)inp.GetValue("Solve Level Set");
     solscalr = (int)inp.GetValue("Solve Scalars");
     solscalr += ilset;
@@ -256,6 +265,7 @@ int input_fform(phSolver::Input& inp)
       exit(1);
     }
     inpdat.impl[0] = 10*solflow+solscalr*100+solheat;
+    inpdat.impl[1] = solelas;   //for mesh-elastic solve
 
     levlset.iLSet = ilset;
     if( ilset > 0) {
@@ -276,6 +286,7 @@ int input_fform(phSolver::Input& inp)
     }
 
     vector<double> vec;
+    vector<int>   ivec;
 
     // OUTPUT CONTROL KEY WORDS.
 
@@ -320,7 +331,7 @@ int input_fform(phSolver::Input& inp)
     for(i=0;i<MAXSURF+1; i++) aerfrc.nsrflist[i] = 0;
     int nsrfCM = inp.GetValue("Number of Force Surfaces");
     if (nsrfCM > 0) {
-      vector<int> ivec = inp.GetValue("Surface ID's for Force Calculation");
+      ivec = inp.GetValue("Surface ID's for Force Calculation");
       for(i=0; i< nsrfCM; i++){
         aerfrc.nsrflist[ivec[i]] = 1;
         //        cout <<"surface in force list "<< ivec[i] << endl;
@@ -382,7 +393,33 @@ int input_fform(phSolver::Input& inp)
     vec.erase(vec.begin(),vec.end());
 
     //Material Properties Keywords 
-    matdat.nummat = levlset.iLSet+1;
+    matdat.nummat = inp.GetValue("Number of Materials");
+    if (matdat.nummat < 1) {
+      cout << "ERROR: Number of Materials has to be greater than 0!\n";
+      exit(1);
+    }
+    if (matdat.nummat > MAXMAT) {
+      cout << "ERROR in Input: increase MAXMAT and recompile\n";
+      exit(1);
+    }
+
+    ivec = inp.GetValue("Material Tags");
+    for (i = 0; i < matdat.nummat; ++i)
+      matdat.mat_tag[0][i] = ivec[i];
+    ivec.erase(ivec.begin(),ivec.end());
+
+    populate_eos_map(eos_map);
+    string sbuf = (string)inp.GetValue("Equations of State");
+    stringstream ss(sbuf);
+    for (i = 0; i < matdat.nummat; ++i){
+      if (!ss.good()) {
+        cout << "Error: while reading the Equations of State!\n";
+        exit(1); }
+      string str;
+      ss >> str;
+      matdat.mat_eos[0][i] = eos_map[str];
+    }
+
     if((string)inp.GetValue("Shear Law") == "Constant Viscosity") 
       for(i=0; i < levlset.iLSet+1; i++) matdat.matflg[i][1] = 0;
 
@@ -394,6 +431,29 @@ int input_fform(phSolver::Input& inp)
     if((string)inp.GetValue("Conductivity Law") == "Constant Conductivity") 
       for(i=0; i < levlset.iLSet+1; i++) matdat.matflg[i][3] = 0;
 
+    /* read material properties into matdat.datmat */
+    string str0;
+    str0.assign("Properties of Material ");
+    for (i = 0; i < matdat.nummat; ++i) {
+      string str;
+      stringstream ss;
+      ss << matdat.mat_tag[0][i];
+      str = str0 + ss.str();
+      vec = inp.GetValue(str);
+      if (vec.size() > MAXPROP) {
+        cout << "ERROR: number of properties for material " << ss.str() << " exceeds MAXPROP " << endl;
+        exit(1);}
+      /* fill mat_prop here... */
+      int j = 0;
+      vector<double>::iterator it = vec.begin();
+      while (it++ < vec.end()) {
+        matdat.mat_prop[0][j][i] = vec[j];
+//cout << vec[j] << endl;
+        j++;
+      }
+      vec.erase(vec.begin(),vec.end());
+    }
+    
     vec = inp.GetValue("Density");
     for(i=0; i< levlset.iLSet +1 ; i++){
       matdat.datmat[i][0][0] = vec[i];
@@ -423,6 +483,16 @@ int input_fform(phSolver::Input& inp)
       sclrs.scdiff[i] = vec[i];
     }
     vec.erase(vec.begin(),vec.end());
+
+//for mesh-elastic--------------------------------------------
+    vec = inp.GetValue("Lame Constant Lamda");
+      matdat.datelas[0][0] = vec[0];
+    vec.erase(vec.begin(),vec.end());
+
+    vec = inp.GetValue("Lame Constant Mu");
+      matdat.datelas[1][0] = vec[0];
+    vec.erase(vec.begin(),vec.end());
+//for mesh-elastic--------------------------------------------
 
     if((string)inp.GetValue("Zero Mean Pressure") == "True")
       turbvar.pzero=1;
@@ -686,7 +756,7 @@ int input_fform(phSolver::Input& inp)
 
     // SCALAR DISCONTINUITY CAPTURING
 
-      vector<int> ivec = inp.GetValue("Scalar Discontinuity Capturing");
+      ivec = inp.GetValue("Scalar Discontinuity Capturing");
       for(i=0; i< 2; i++)  solpar.idcsclr[i] = ivec[i];
       ivec.erase(ivec.begin(),ivec.end());
  
@@ -722,6 +792,7 @@ int input_fform(phSolver::Input& inp)
 
     intdat.intg[0][0]=inp.GetValue("Quadrature Rule on Interior");
     intdat.intg[0][1]=inp.GetValue("Quadrature Rule on Boundary");
+    intdat.intg[0][2]=inp.GetValue("Quadrature Rule on interface");
     genpar.ibksiz = inp.GetValue("Number of Elements Per Block");
 
     ((string)inp.GetValue("Turn Off Source Terms for Scalars") 
