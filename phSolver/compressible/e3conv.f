@@ -1,8 +1,10 @@
         subroutine e3conv (g1yi,   g2yi,   g3yi,
-     &                     A1,     A2,     A3, 
+     &                     A0,     A1,     A2,     A3,
      &                     rho,    pres,   T,
-     &                     ei,     rk,     u1,
-     &                     u2,     u3,     rLyi,   
+     &                     ei,     rk,     
+     &                     u1,     u2,     u3,
+     &                     um1,    um2,    um3,
+     &                     divum,  rLyi,   
      &                     ri,     rmi,    EGmass,
      &                     shg,    shape,  WdetJ )
 !
@@ -48,7 +50,7 @@
 !
         dimension g1yi(npro,nflow),           g2yi(npro,nflow),
      &            g3yi(npro,nflow),           
-     &            A1(npro,nflow,nflow),
+     &            A0(npro,nflow,nflow),       A1(npro,nflow,nflow),
      &            A2(npro,nflow,nflow),       A3(npro,nflow,nflow),
      &            rho(npro),                pres(npro),
      &            T(npro),                  ei(npro),
@@ -61,9 +63,10 @@
 !
 !  local arrays  
 !
-        dimension AiNbi(npro,nflow,nflow),     fact1(npro),
-     &            fact2(npro),               fact3(npro)
-        
+        dimension AiNbi(npro,nflow,nflow)
+        real*8, dimension(npro) :: fact0, fact1, fact2, fact3
+        real*8, dimension(npro), intent(in) :: um1, um2, um3, divum
+c        
         ttim(22) = ttim(22) - secs(0.0)
 
 !
@@ -73,23 +76,30 @@
 !
 !.... calculate integrated by part contribution of Euler flux (Galerkin)
 !
-          ri(:, 1) = (- u1) * rho
-          ri(:, 2) = (- u1) * rho * u1 - pres
-          ri(:, 3) = (- u1) * rho * u2
-          ri(:, 4) = (- u1) * rho * u3
-          ri(:, 5) = (- u1) * rho * (ei + rk) - u1 * pres
+          ri(:, 1) = (- u1 + um1) * rho
+          ri(:, 2) = (- u1 + um1) * rho * u1 - pres
+          ri(:, 3) = (- u1 + um1) * rho * u2
+          ri(:, 4) = (- u1 + um1) * rho * u3
+          ri(:, 5) = (- u1 + um1) * rho * (ei + rk) - u1 * pres
 !
-          ri(:, 6) = (- u2) * rho
-          ri(:, 7) = (- u2) * rho * u1
-          ri(:, 8) = (- u2) * rho * u2 - pres
-          ri(:, 9) = (- u2) * rho * u3
-          ri(:,10) = (- u2) * rho * (ei + rk) - u2 * pres
+          ri(:, 6) = (- u2 + um2) * rho
+          ri(:, 7) = (- u2 + um2) * rho * u1
+          ri(:, 8) = (- u2 + um2) * rho * u2 - pres
+          ri(:, 9) = (- u2 + um2) * rho * u3
+          ri(:,10) = (- u2 + um2) * rho * (ei + rk) - u2 * pres
 !
-          ri(:,11) = (- u3) * rho
-          ri(:,12) = (- u3) * rho * u1
-          ri(:,13) = (- u3) * rho * u2
-          ri(:,14) = (- u3) * rho * u3 - pres
-          ri(:,15) = (- u3) * rho * (ei + rk) - u3 * pres
+          ri(:,11) = (- u3 + um3) * rho
+          ri(:,12) = (- u3 + um3) * rho * u1
+          ri(:,13) = (- u3 + um3) * rho * u2
+          ri(:,14) = (- u3 + um3) * rho * u3 - pres
+          ri(:,15) = (- u3 + um3) * rho * (ei + rk) - u3 * pres
+c
+          ri(:,16) = ri(:,16) + divum * rho
+          ri(:,17) = ri(:,17) + divum * rho * u1
+          ri(:,18) = ri(:,18) + divum * rho * u2
+          ri(:,19) = ri(:,19) + divum * rho * u3
+          ri(:,20) = ri(:,20) + divum * rho * (ei + rk)
+c         
 !
 !      flops = flops + 28*npro
 !
@@ -194,117 +204,144 @@
 !
 !.... compute some useful factors
 !
+           fact0 = WdetJ * divum * shape(:,j)
            fact1 = WdetJ * shg(:,j,1)
            fact2 = WdetJ * shg(:,j,2)
            fact3 = WdetJ * shg(:,j,3)
-!
-!.... first compute (A_i N_b,i)
-!
+c
+c.... first compute (A_i N_b,i) + (divum A_0 N_b)
+c     but for convenience, still name it AiNbi
+c
            AiNbi(:,1,1) = 
      &                    fact1 * A1(:,1,1) 
      &                  + fact2 * A2(:,1,1) 
      &                  + fact3 * A3(:,1,1)
+     &                  + fact0 * A0(:,1,1) 
            AiNbi(:,1,2) = 
      &                    fact1 * A1(:,1,2) 
      &                  + fact2 * A2(:,1,2) 
      &                  + fact3 * A3(:,1,2)
+     &                  + fact0 * A0(:,1,2) 
            AiNbi(:,1,3) = 
      &                    fact1 * A1(:,1,3) 
      &                  + fact2 * A2(:,1,3) 
      &                  + fact3 * A3(:,1,3)
+     &                  + fact0 * A0(:,1,3) 
            AiNbi(:,1,4) = 
      &                    fact1 * A1(:,1,4) 
      &                  + fact2 * A2(:,1,4) 
      &                  + fact3 * A3(:,1,4)
+     &                  + fact0 * A0(:,1,4) 
            AiNbi(:,1,5) = 
      &                    fact1 * A1(:,1,5) 
      &                  + fact2 * A2(:,1,5) 
      &                  + fact3 * A3(:,1,5)
-
+     &                  + fact0 * A0(:,1,5) 
+c
            AiNbi(:,2,1) = 
      &                    fact1 * A1(:,2,1) 
      &                  + fact2 * A2(:,2,1) 
      &                  + fact3 * A3(:,2,1)
+     &                  + fact0 * A0(:,2,1) 
            AiNbi(:,2,2) = 
      &                    fact1 * A1(:,2,2) 
      &                  + fact2 * A2(:,2,2) 
      &                  + fact3 * A3(:,2,2)
+     &                  + fact0 * A0(:,2,2) 
            AiNbi(:,2,3) = 
      &                    fact1 * A1(:,2,3) 
      &                  + fact2 * A2(:,2,3) 
      &                  + fact3 * A3(:,2,3)
+     &                  + fact0 * A0(:,2,3) 
            AiNbi(:,2,4) = 
      &                    fact1 * A1(:,2,4) 
      &                  + fact2 * A2(:,2,4) 
      &                  + fact3 * A3(:,2,4)
+     &                  + fact0 * A0(:,2,4)
            AiNbi(:,2,5) = 
      &                    fact1 * A1(:,2,5) 
      &                  + fact2 * A2(:,2,5) 
      &                  + fact3 * A3(:,2,5)
-
+     &                  + fact0 * A0(:,2,5)
+c
            AiNbi(:,3,1) = 
      &                    fact1 * A1(:,3,1) 
      &                  + fact2 * A2(:,3,1) 
      &                  + fact3 * A3(:,3,1)
+     &                  + fact0 * A0(:,3,1) 
            AiNbi(:,3,2) = 
      &                    fact1 * A1(:,3,2) 
      &                  + fact2 * A2(:,3,2) 
      &                  + fact3 * A3(:,3,2)
+     &                  + fact0 * A0(:,3,2) 
            AiNbi(:,3,3) = 
      &                    fact1 * A1(:,3,3) 
      &                  + fact2 * A2(:,3,3) 
      &                  + fact3 * A3(:,3,3)
+     &                  + fact0 * A0(:,3,3) 
            AiNbi(:,3,4) = 
      &                    fact1 * A1(:,3,4) 
      &                  + fact2 * A2(:,3,4) 
      &                  + fact3 * A3(:,3,4)
+     &                  + fact0 * A0(:,3,4) 
            AiNbi(:,3,5) = 
      &                    fact1 * A1(:,3,5) 
      &                  + fact2 * A2(:,3,5) 
      &                  + fact3 * A3(:,3,5)
-
+     &                  + fact0 * A0(:,3,5) 
+c
            AiNbi(:,4,1) = 
      &                    fact1 * A1(:,4,1) 
      &                  + fact2 * A2(:,4,1) 
      &                  + fact3 * A3(:,4,1)
+     &                  + fact0 * A0(:,4,1) 
            AiNbi(:,4,2) = 
      &                    fact1 * A1(:,4,2) 
      &                  + fact2 * A2(:,4,2) 
      &                  + fact3 * A3(:,4,2)
+     &                  + fact0 * A0(:,4,2) 
            AiNbi(:,4,3) = 
      &                    fact1 * A1(:,4,3) 
      &                  + fact2 * A2(:,4,3) 
      &                  + fact3 * A3(:,4,3)
+     &                  + fact0 * A0(:,4,3) 
            AiNbi(:,4,4) = 
      &                    fact1 * A1(:,4,4) 
      &                  + fact2 * A2(:,4,4) 
      &                  + fact3 * A3(:,4,4)
+     &                  + fact0 * A0(:,4,4) 
            AiNbi(:,4,5) = 
      &                    fact1 * A1(:,4,5) 
      &                  + fact2 * A2(:,4,5) 
      &                  + fact3 * A3(:,4,5)
-
+     &                  + fact0 * A0(:,4,5) 
+c
            AiNbi(:,5,1) = 
      &                    fact1 * A1(:,5,1) 
      &                  + fact2 * A2(:,5,1) 
      &                  + fact3 * A3(:,5,1)
+     &                  + fact0 * A0(:,5,1) 
            AiNbi(:,5,2) = 
      &                    fact1 * A1(:,5,2) 
      &                  + fact2 * A2(:,5,2) 
      &                  + fact3 * A3(:,5,2)
+     &                  + fact0 * A0(:,5,2) 
            AiNbi(:,5,3) = 
      &                    fact1 * A1(:,5,3) 
      &                  + fact2 * A2(:,5,3) 
      &                  + fact3 * A3(:,5,3)
+     &                  + fact0 * A0(:,5,3) 
            AiNbi(:,5,4) = 
      &                    fact1 * A1(:,5,4) 
      &                  + fact2 * A2(:,5,4) 
      &                  + fact3 * A3(:,5,4)
+     &                  + fact0 * A0(:,5,4) 
            AiNbi(:,5,5) = 
      &                    fact1 * A1(:,5,5) 
      &                  + fact2 * A2(:,5,5) 
      &                  + fact3 * A3(:,5,5)
-!
+     &                  + fact0 * A0(:,5,5) 
+c
 !.... now loop through the row nodes and add (N_a A_i N_b,i) to
 !     the tangent matrix.
 !

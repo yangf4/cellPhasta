@@ -42,6 +42,7 @@ c
          type (i2d), dimension(MAXBLK2) ::  mien
          type (i2d64), dimension(MAXBLK2) ::  mienG
          type (i2d), dimension(MAXBLK2) ::  mienb,  miBCB
+         type (i2d), dimension(MAXBLK2) ::  mienif0, mienif1
          type (r2d), dimension(MAXBLK2) ::  mxmudmi
          type (r3d), dimension(MAXBLK2) ::  mBCB
 c

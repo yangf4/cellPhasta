@@ -148,8 +148,9 @@ c
 c
         common /mbndnod/ mnodeb(9,8,3)
 c
-	integer, target :: numnp,  numel,  numelb, numpbc, nen,    nfaces,
-     &                  numflx, ndof,   nelblk, nelblb,ntopsh, nlwork,
+	integer, target :: numnp,  numel,  numelb, numelif, numpbc, 
+     &                  nen,    nfaces,
+     &                  numflx, ndof,   nelblk, nelblb, nelblif, ntopsh, nlwork,
      &                  nedof,
      &                  nshg,   nnz,    nflow,
      &                  nfath, ncorpsize, iownnodes, usingpetsc

@@ -118,6 +118,10 @@ c
      &  c_loc(numelb),ione, dataInt, iotype)
 
       call phio_readheader(fhandle,
+     &  c_char_'number of interface elements' // char(0),
+     &  c_loc(numelif),ione, dataInt, iotype)
+
+      call phio_readheader(fhandle,
      &  c_char_'maximum number of element nodes' // char(0),
      &  c_loc(nen),ione, dataInt, iotype)
 
@@ -128,6 +132,10 @@ c
       call phio_readheader(fhandle,
      & c_char_'number of boundary tpblocks' // char(0),
      & c_loc(nelblb),ione, dataInt, iotype)
+
+      call phio_readheader(fhandle,
+     & c_char_'number of interface tpblocks' // char(0),
+     & c_loc(nelblif),ione, dataInt, iotype)
 
       call phio_readheader(fhandle,
      & c_char_'number of nodes with Dirichlet BCs' // char(0),
@@ -156,11 +164,19 @@ c
       else
          nflow = nsd + 2
       endif 
+c
+      if (impl(2) .gt. 0) then
+         nelas = nsd               ! FOR mesh-elastic 
+      else
+         nelas = 0
+      endif
+c
       ndof   = nsd + 2
       nsclr=impl(1)/100
       ndof=ndof+nsclr           ! number of sclr transport equations to solve
       
       ndofBC = ndof + I3nsd     ! dimension of BC array
+     &       + nelas            ! add nelas for mesh-elastic solve
       ndiBCB = 2                ! dimension of iBCB array
       ndBCB  = ndof + 1         ! dimension of BCB array
       nsymdf = (ndof*(ndof + 1)) / 2 ! symm. d.o.f.'s
@@ -352,6 +368,9 @@ c
 c.... generate the boundary element blocks
 c
       call genbkb (ibksiz)
+
+      call genbkif (ibksiz)
+
 c
 c  Read in the nsons and ifath arrays if needed
 c

@@ -1,7 +1,7 @@
         subroutine e3 (yl,      ycl,     acl,     shp,
      &                 shgl,    xl,      rl,      rml,    xmudmi,
      &                 BDiagl,  ql,      sgn,     rlsl,   EGmass,
-     &                 rerrl,   ytargetl)
+     &                 rerrl,   ytargetl, mater,  uml)
 c                                                                      
 c----------------------------------------------------------------------
 c
@@ -57,6 +57,7 @@ c
      &            BDiagl(npro,nshl,nflow,nflow),
      &            EGmass(npro,nedof,nedof),cv(npro),
      &            ytargetl(npro,nshl,nflow)
+        integer, intent(in) :: mater
 c
         dimension dui(npro,ndof),            aci(npro,ndof)
 c
@@ -93,6 +94,12 @@ c
         dimension rlsl(npro,nshl,6),      rlsli(npro,6)
         
         real*8    rerrl(npro,nshl,6)
+c
+c
+        dimension uml(npro,nshl,nsd),     um1(npro),
+     &            um2(npro),              um3(npro), 
+     &            divum(npro)
+c
         ttim(6) = ttim(6) - secs(0.0)
 c
 c.... local reconstruction of diffusive flux vector
@@ -135,11 +142,13 @@ c
      &               ei,              h,               alfap,
      &               betaT,           cp,              rk,
      &               u1,              u2,              u3,              
+     &               um1,             um2,             um3,
      &               ql,              divqi,           sgn,
      &               rLyi,  !passed as a work array
      &               rmu,             rlm,             rlm2mu,
      &               con,             rlsl,            rlsli,
-     &               xmudmi,          sforce,          cv)
+     &               xmudmi,          sforce,          cv,
+     &               mater,           uml,             divum   )
         ttim(8) = ttim(8) + secs(0.0)
         
 c
@@ -150,6 +159,7 @@ c
      &               ei,              h,              alfap,
      &               betaT,           cp,             rk,
      &               u1,              u2,             u3,
+     &               um1,             um2,            um3,
      &               A0,              A1,
      &               A2,              A3,             
      &               rLyi(:,1),       rLyi(:,2),      rLyi(:,3),  ! work arrays
@@ -161,10 +171,12 @@ c.... calculate the convective contribution (Galerkin)
 c
         ttim(14) = ttim(14) - secs(0.0)
         call e3conv (g1yi,            g2yi,            g3yi,
-     &               A1,              A2,              A3,
+     &               A0,              A1,              A2,              A3,
      &               rho,             pres,            T,
-     &               ei,              rk,              u1,
-     &               u2,              u3,              rLyi,
+     &               ei,              rk,              
+     &               u1,              u2,              u3,              
+     &               um1,             um2,             um3,
+     &               divum,           rLyi,
      &               ri,              rmi,             EGmass,
      &               shg,             shape,           WdetJ)
         ttim(14) = ttim(14) + secs(0.0)
@@ -202,6 +214,7 @@ c
      &               rho,             rmu,           cp,
      &               cv,              con,           T,  
      &               u1,              u2,            u3,              
+     &               um1,             um2,           um3,              
      &               rLyi,            dxidx,         tau,  
      &               ri,              rmi,           rk, 
      &               dui,             aci,           A0,

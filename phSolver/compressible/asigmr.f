@@ -1,7 +1,8 @@
         subroutine AsIGMR (y,       ac,      x,        xmudmi,   
      &                     shp,     shgl,    ien,     
      &                     mater,   res,     rmes,    
-     &                     BDiag,   qres,    EGmass,   rerr)
+     &                     BDiag,   qres,    EGmass,   
+     &                     rerr,    umesh )
 c
 c----------------------------------------------------------------------
 c
@@ -21,9 +22,10 @@ c
      &            shp(nshl,MAXQPT),  
      &            shgl(nsd,nshl,MAXQPT),
      &            ien(npro,nshl),  
-     &            mater(npro),              res(nshg,nflow),
+     &            res(nshg,nflow),
      &            rmes(nshg,nflow),         BDiag(nshg,nflow,nflow),
      &            qres(nshg,idflx)
+      integer, intent(in) :: mater
 
 c
         dimension ycl(npro,nshl,ndofl),     acl(npro,nshl,ndof),
@@ -34,7 +36,9 @@ c
 c        
         dimension  xmudmi(npro,ngauss)
         dimension sgn(npro,nshl),  EGmass(npro,nedof,nedof)
-
+c
+        dimension umesh(numnp, nsd),  uml(npro,nshl,nsd)
+c
         dimension rlsl(npro,nshl,6) 
         real*8 rerrl(npro,nshl,6), rerr(nshg,10)
 
@@ -53,6 +57,7 @@ c
         call localy(ac,    acl,     ien,    ndofl,  'gather  ')
         call localx(x,      xl,     ien,    nsd,    'gather  ')
         call local (qres,   ql,     ien,    idflx,  'gather  ')
+        call local (umesh,  uml,    ien,    nsd,    'gather  ')
 
         if(matflg(5,1).ge.4 )
      &   call localy (ytarget,   ytargetl,  ien,   nflow,  'gather  ')
@@ -75,7 +80,7 @@ c
         call e3  (ycl,     ycl,     acl,     shp,
      &            shgl,    xl,      rl,      rml,   xmudmi,
      &            BDiagl,  ql,      sgn,     rlsl,  EGmass,
-     &            rerrl,   ytargetl)
+     &            rerrl,   ytargetl, mater,  uml)
 
         ttim(31) = ttim(31) + secs(0.0)
 c

@@ -361,16 +361,13 @@ c
       end
 
 
-
-
-
       subroutine SolGMRs(y,         ac,        yold,      acold,
      &			 x,         iBC,       BC,  
      &                   col,       row,       lhsk,         
      &                   res,       BDiag,     HBrg,      eBrg,
      &                   yBrg,      Rcos,      Rsin,      iper,
      &                   ilwork,    shp,       shgl,      shpb,
-     &                   shglb,     Dy,        rerr)
+     &                   shglb,     Dy,        rerr,      umesh)
 c
 c----------------------------------------------------------------------
 c
@@ -423,7 +420,8 @@ c
 c
       dimension Dy(nshg,nflow),            rmes(nshg,nflow),
      &          temp(nshg,nflow),
-     &          uBrg(nshg,nflow,Kspace+1)
+     &          uBrg(nshg,nflow,Kspace+1),
+     &          umesh(numnp, nsd)
 c        
       dimension shp(MAXTOP,maxsh,MAXQPT),  
      &          shgl(MAXTOP,nsd,maxsh,MAXQPT), 
@@ -447,11 +445,12 @@ c     diagonal preconditioner
 c
       call ElmGMRs(y,             ac,            x,
      &             shp,           shgl,          iBC,
-     &             BC,            shpb,
-     &             shglb,         res,
-     &             rmes,          BDiag,         iper,      
-     &             ilwork,        lhsK,          col, 
-     &             row,           rerr )
+     &             BC,            shpb,          shglb,         
+     &             shpif0,        shpif1,        shgif0,   shgif1,
+     &             res,           rmes,          BDiag,         
+     &             iper,          ilwork,        lhsK,          
+     &             col,           row,           rerr,
+     &             umesh )
       call rstat (res, ilwork) 
       if(ntotGM.eq.0) resfrt=zero  !don't let this mess up scaled dB     
       if(myrank.eq.master) then

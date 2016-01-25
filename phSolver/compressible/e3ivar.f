@@ -7,10 +7,12 @@
      &                     ei,      h,       alfap,   
      &                     betaT,   cp,      rk,      
      &                     u1,      u2,      u3,
+     &                     um1,     um2,     um3, 
      &                     ql,      divqi,   sgn, tmp,
      &                     rmu,     rlm,     rlm2mu,
      &                     con,     rlsl,    rlsli, 
-     &                     xmudmi,  sforce,  cv) 
+     &                     xmudmi,  sforce,  cv,
+     &                     mater,   uml,     divum )
 c
 c----------------------------------------------------------------------
 c
@@ -50,6 +52,7 @@ c  u2     (npro)                : x2-velocity component
 c  u3     (npro)                : x3-velocity component
 c  divqi  (npro,nflow-1)        : divergence of diffusive flux
 c  rlsli  (npro,6)              : resolved Leonard stresses at quad pt
+c  divum  (npro)                : divergence of mesh velocity 
 c
 c Zdenek Johan, Summer 1990. (Modified from e2ivar.f)
 c Zdenek Johan, Winter 1991. (Fortran 90)
@@ -86,6 +89,12 @@ c
      &            xmudmi(npro,ngauss)
         dimension gyti(npro,nsd),            gradh(npro,nsd),
      &            sforce(npro,3),            weber(npro) 
+        integer mater
+c
+        dimension um1(npro),                 um2(npro),
+     &            um3(npro),                 divum(npro),
+     &            uml(npro, nshl, nsd)
+c
         ttim(20) = ttim(20) - secs(0.0)
 
 c
@@ -117,12 +126,8 @@ c
         endif
         
         ithm = 6
-        call getthm (dui(:,1),   dui(:,5),     Sclr,
-     &               rk,         rho,          ei,
-     &               tmp,        tmp,          tmp,
-     &               tmp,        tmp,          tmp,
-     &               tmp,        tmp)
-c     
+         call getthm(rho, ei, dui(:,1), dui(:,5), npro, mater
+     &,              tmp, tmp, tmp, tmp, tmp, tmp, tmp)
 c
         dui(:,1) = rho
         dui(:,2) = rho * dui(:,2)
@@ -143,6 +148,9 @@ c
        u1   = zero
        u2   = zero
        u3   = zero
+       um1  = zero
+       um2  = zero
+       um3  = zero
        T    = zero
        do n = 1, nshl 
 c
@@ -153,6 +161,12 @@ c
           u2   = u2   + shape(:,n) * ycl(:,n,3)
           u3   = u3   + shape(:,n) * ycl(:,n,4)
           T    = T    + shape(:,n) * ycl(:,n,5)          
+c
+c.... ALE convective velocity at integral point
+c
+          um1  = um1  + shape(:,n) * uml(:,n,1)
+          um2  = um2  + shape(:,n) * uml(:,n,2)
+          um3  = um3  + shape(:,n) * uml(:,n,3)
        enddo
 
        if( (iLES.gt.10).and.(iLES.lt.20))  then  ! bardina
@@ -216,20 +230,15 @@ c
         endif
 
         ithm = 7
-        call getthm (pres,            T,               Sclr,
-     &               rk,              rho,             ei,
-     &               h,               tmp,             cv,
-     &               cp,              alfap,           betaT,
-     &               tmp,             tmp)
+         call getthm(rho, ei, pres, T, npro, mater
+     &,              h,   cv, cp,   alfap, betaT, tmp,  tmp)
 c
         ttim(27) = ttim(27) + secs(0.0)
 c
 c ........Get the material properties 
 c
-        call getDiff (T,        cp,       rho,        ycl, 
-     &                rmu,      rlm,      rlm2mu,     con,  shape,
-     &                xmudmi,   xl)
-
+         call getdiff(rmu, rlm, rlm2mu, con, npro, mater)
+c
 c.... --------------------->  Element Metrics  <-----------------------
 c
       ttim(26) = ttim(26) - secs(0.0)
@@ -354,9 +363,16 @@ c
 c
         enddo
       endif
-
-
 c
+c.... u^m_{i,i} divum at integral point
+c
+       divum = zero
+c
+        do isd = 1,nsd
+          do n = 1,nshl
+            divum = divum + shg(:,n,isd) * uml(:,n,isd)
+          enddo
+        enddo
 c     
          divqi = zero
          idflow = 0
