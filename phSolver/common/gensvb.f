@@ -1,39 +1,22 @@
-        subroutine gensvb (ientmp, iBCBtmp, BCBtmp, mattmp,
-     &                     ienb,   iBCB,    BCB,    materb)
+        subroutine gensvb (ienb,   ibcb,    bcb)
 c
+          use mattype_m
 c----------------------------------------------------------------------
 c
 c  This routine saves the boundary element block.
 c
-c input:
-c  ientmp (npro,nshl)           : boundary nodal connectivity
-c  iBCtmp (npro,ndiBCB)         : boundary condition codes
-c  BCBtmp (npro,nshlb,ndBCB)    : boundary condition values
-c  mattmp (npro)                : material type flag
-c
-c output:
-c  ienb   (npro,nshl)           : boundary nodal connectivity
-c  iBCB   (npro,ndiBCB)         : boundary condition codes
-c  BCB    (npro,nshlb,ndBCB)    : boundary condition values
-c  materb (npro)                : material type flag
-c
-c
-c Zdenek Johan, Winter 1992.
 c----------------------------------------------------------------------
 c
         include "common.h"
 c
-        dimension   ientmp(npro,nshl),
-     &              iBCBtmp(npro,ndiBCB),    BCBtmp(npro,ndBCB)
-
-        dimension   mattmp(npro),           ienb(npro,nshl),
-     &              iBCB(npro,ndiBCB),      BCB(npro,nshlb,ndBCB),
-     &              materb(npro)
+        integer, dimension(npro,nshl),        intent(out) :: ienb
+        integer, dimension(npro,ndibcb),      intent(out) :: ibcb
+        real*8,  dimension(npro,nshlb,ndbcb), intent(out) :: bcb
 c
 c.... generate the boundary element mapping
 c
         do i = 1, nshl
-          ienb(:,i) = ientmp(:,i)
+          ienb(1:npro,i) = ientmp(1:npro,i)
         enddo
 c
 c.... save the boundary element data
@@ -51,8 +34,6 @@ c
               BCB(:,i,j)   = zero
            end do
         end do
-
-        materb = mattmp
 c
 c.... return
 c

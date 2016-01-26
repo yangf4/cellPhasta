@@ -12,6 +12,7 @@ c
         use pointer_data
         use phio
         use iso_c_binding
+        use mattype_m
         include "common.h"
         include "mpif.h" !Required to determine the max for itpblk
 
@@ -105,6 +106,12 @@ c
            allocate (ientp(neltp,nshl))
            allocate (iBCBtp(neltp,ndiBCB))
            allocate (BCBtp(neltp,ndBCB))
+           allocate(ientmp (ibksz,nshl))
+           allocate(ibcbtmp(ibksz,ndiBCB))
+           allocate(bcbtmp (ibksz,ndBCB))
+           allocate(mattype(intfromfile(1)))
+           allocate(neltp_mattype(nummat))
+           
            iientpsiz=neltp*nshl
 
            if (neltp==0) then
@@ -113,6 +120,19 @@ c
 
            call phio_readdatablock(fhandle, fname2 // char(0),
      &      c_loc(ientp),iientpsiz,dataInt,iotype)
+c
+c.... Read the boundary material type
+c
+           if(input_mode.gt.1)then
+             write (fname2,"('material type boundary',i1)") iblk
+           else
+             write( fname2,"('material type boundary')")
+           endif
+           call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ione, dataInt, iotype)
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(mattype), intfromfile(1), dataInt, iotype)
 c     
 c.... Read the boundary flux codes
 c
@@ -150,29 +170,55 @@ c is not set.  DEC has indigestion with these arrays though the
 c result is never used (never effects solution).
 c
            if(writeLock==0) then
-              where(.not.btest(iBCBtp(:,1),0)) BCBtp(:,1)=zero
-              where(.not.btest(iBCBtp(:,1),1)) BCBtp(:,2)=zero
-              where(.not.btest(iBCBtp(:,1),3)) BCBtp(:,6)=zero
-              if(ndBCB.gt.6) then
-                 do i=6,ndof
-                    where(.not.btest(iBCBtp(:,1),i-1)) BCBtp(:,i+1)=zero
-                 enddo
-              endif
-              where(.not.btest(iBCBtp(:,1),2)) 
-                 BCBtp(:,3)=zero
-                 BCBtp(:,4)=zero
-                 BCBtp(:,5)=zero
-              endwhere
+
+             where(.not.btest(iBCBtp(:,1),0)) BCBtp(:,1)=zero
+             where(.not.btest(iBCBtp(:,1),1)) BCBtp(:,2)=zero
+             where(.not.btest(iBCBtp(:,1),3)) BCBtp(:,6)=zero
+             if(ndBCB.gt.6) then
+                do i=6,ndof
+                   where(.not.btest(iBCBtp(:,1),i-1)) BCBtp(:,i+1)=zero
+                enddo
+             endif
+             where(.not.btest(iBCBtp(:,1),2)) 
+                BCBtp(:,3)=zero
+                BCBtp(:,4)=zero
+                BCBtp(:,5)=zero
+             endwhere
               
-              do n=1,neltp,ibksz 
+c
+c... count elemets with the same mattype
+c
+             call count_elem_mattype(mattype,neltp,mat_tag(1:nummat,1),nummat)
+c
+             material_loop: do imattype = 1,nummat
+
+               iptr = 1
+
+               blocks_loop: do
+c
+c... get npro and fill the temp arrays: ientmp, ibcbtmp, bcbtmp
+c
+               npro = 0
+c
+               do 
+                 if (mattype(iptr) == mat_tag(imattype,1)) then
+                   npro = npro + 1
+                   ientmp (npro,1:nshl)   = ientp (iptr,1:nshl)
+                   ibcbtmp(npro,1:ndiBCB) = ibcbtp(iptr,1:ndiBCB)
+                   bcbtmp (npro,1:ndBCB)  = bcbtp (iptr,1:ndBCB)
+                 endif
+                 iptr = iptr + 1
+                 if (npro == ibksz .or. iptr>neltp) exit
+               enddo
+c
                  nelblb=nelblb+1
-                 npro= min(IBKSZ, neltp - n + 1)
+c
                  lcblkb(1,nelblb)  = iel
                  lcblkb(3,nelblb)  = lcsyst
                  lcblkb(4,nelblb)  = ipordl
                  lcblkb(5,nelblb)  = nenl
                  lcblkb(6,nelblb)  = nenbl
-                 lcblkb(7,nelblb)  = mattyp
+                 lcblkb(7,nelblb)  = imattype
                  lcblkb(8,nelblb)  = ndofl
                  lcblkb(9,nelblb)  = nshl 
                  lcblkb(10,nelblb) = nshlb ! # of shape functions per elt
@@ -188,21 +234,33 @@ c
                  allocate (mienb(nelblb)%p(npro,nshl))
                  allocate (miBCB(nelblb)%p(npro,ndiBCB))
                  allocate (mBCB(nelblb)%p(npro,nshlb,ndBCB))
-                 allocate (mmatb(nelblb)%p(npro))
 c 
 c.... save the boundary element block
 c 
-                 call gensvb (ientp(n1:n2,1:nshl),
-     &                iBCBtp(n1:n2,:),      BCBtp(n1:n2,:),
-     &                materb,        mienb(nelblb)%p,
-     &                miBCB(nelblb)%p,        mBCB(nelblb)%p,
-     &                mmatb(nelblb)%p)
+c                 call gensvb (ientp(n1:n2,1:nshl),
+c     &                iBCBtp(n1:n2,:),      BCBtp(n1:n2,:),
+c     &                materb,        mienb(nelblb)%p,
+c     &                miBCB(nelblb)%p,        mBCB(nelblb)%p,
+c     &                mmatb(nelblb)%p)
+c
+                call gensvb (mienb(nelblb)%p, mibcb(nelblb)%p, mbcb(nelblb)%p,
+     &                     ientmp,         ibcbtmp,        bcbtmp)
+c
                  iel=iel+npro
-              enddo
+                 if (iptr > neltp) exit blocks_loop
+
+               enddo blocks_loop
+
+             enddo material_loop
+
            endif
            deallocate(ientp)
            deallocate(iBCBtp)
            deallocate(BCBtp)
+           deallocate(ientmp,ibcbtmp)
+           deallocate(mattype)
+           deallocate(neltp_mattype)
+           deallocate(bcbtmp)
 
         enddo
         lcblkb(1,nelblb+1) = iel

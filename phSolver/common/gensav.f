@@ -1,12 +1,8 @@
-        subroutine gensav (ientmp, mattmp, ien,    ienG, mater)
+        subroutine gensav (ien,ienG)
 c
 c----------------------------------------------------------------------
 c
 c  This routine saves the element block data.
-c
-c input:
-c  ientmp (npro,nshl)   : nodal connectivity 
-c  mattmp (npro)        : material type flag
 c
 c output:
 c  ien    (npro,nshl)   : nodal connectivity
@@ -18,12 +14,10 @@ c----------------------------------------------------------------------
 c
         use readarrays
         use fncorpmod
+        use mattype_m
         include "common.h"
 c
-        dimension   ientmp(npro,nshl),
-     &              mattmp(npro),           ien(npro,nshl),
-     &              mater(npro)
-       integer*8    ienG(npro,nshl)
+        integer, dimension(npro,nshl), intent(out) :: ien, ienG
 c
 c.... save the element data
 c
@@ -39,8 +33,6 @@ c
             endif
           enddo
         endif
-c
-        mater = mattmp
 c
 c.... end
 c

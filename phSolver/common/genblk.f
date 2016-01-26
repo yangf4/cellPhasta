@@ -11,13 +11,14 @@ c
         use pointer_data
         use phio
         use iso_c_binding
+        use mattype_m
         include "common.h"
         include "mpif.h" !Required to determine the max for itpblk
 
         integer, target, allocatable :: ientp(:,:)
         integer mater(ibksz)
         integer, target :: intfromfile(50) ! integers read from headers
-        character*255 fname1
+        character*255 :: fname1
         integer :: descriptor, descriptorG, GPID, color
         integer ::  numparts, writeLock
         integer :: ierr_io, numprocs
@@ -79,12 +80,12 @@ c
 
         do iblk = 1, itpblktot
            writeLock=0;
-            if(input_mode.ge.1) then
-              write (fname2,"('connectivity interior',i1)") iblk
-            else
-              write (fname2,"('connectivity interior linear tetrahedron')") 
+           if(input_mode.ge.1) then
+             write (fname2,"('connectivity interior',i1)") iblk
+           else
+             write (fname2,"('connectivity interior linear tetrahedron')") 
 !              write (fname2,"('connectivity interior?')") 
-            endif
+           endif
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
@@ -98,6 +99,9 @@ c
            ijunk  =intfromfile(6)
            lcsyst =intfromfile(7)
            allocate (ientp(neltp,nshl))
+           allocate (ientmp(ibksz,nshl))
+           allocate (mattype(intfromfile(1)))
+           allocate (neltp_mattype(nummat))
            iientpsiz=neltp*nshl
 
            if (neltp==0) then
@@ -107,47 +111,81 @@ c
            call phio_readdatablock(fhandle,fname2 // char(0),
      &      c_loc(ientp), iientpsiz, dataInt, iotype)
 
+           if(input_mode.ge.1) then
+             write(fname2,"('material type interior',i1)") iblk
+           else
+             write(fname2,"('material type interior')")
+           endif
+c
+           call MPI_Barrier(MPI_COMM_WORLD,ierr) 
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), 1, dataInt, iotype)
+           call phio_readdatablock(fhandle,fname2 // char(0),
+     &      c_loc(mattype), intfromfile(1), dataInt, iotype)
+
            if(writeLock==0) then
-             do n=1,neltp,ibksz 
-                nelblk=nelblk+1
-                npro= min(IBKSZ, neltp - n + 1)
-                lcblk(1,nelblk)  = iel
-                lcblk(3,nelblk)  = lcsyst
-                lcblk(4,nelblk)  = ipordl
-                lcblk(5,nelblk)  = nenl
-                lcblk(6,nelblk)  = nfacel
-                lcblk(7,nelblk)  = mattyp
-                lcblk(8,nelblk)  = ndofl
-                lcblk(9,nelblk)  = nsymdl 
-                lcblk(10,nelblk) = nshl ! # of shape functions per elt
+c
+c ... count elements with the same mattype
+c
+             call count_elem_mattype(mattype,neltp,mat_tag(1:nummat,1),nummat)
+c
+             material_loop: do imattype = 1, nummat
+c
+               iptr = 1
+c
+               blocks_loop: do
+c
+                 npro = 0
+c
+                 do 
+                   if (mattype(iptr) == mat_tag(imattype,1)) then
+                     npro = npro + 1
+                     ientmp(npro,1:nshl) = ientp(iptr,1:nshl)
+                   endif
+                   iptr = iptr + 1
+                   if (npro == ibksz .or. iptr > neltp) exit
+                 enddo
+c
+                 nelblk = nelblk + 1
+                 lcblk(1,nelblk)  = iel
+                 lcblk(3,nelblk)  = lcsyst
+                 lcblk(4,nelblk)  = ipordl
+                 lcblk(5,nelblk)  = nenl
+                 lcblk(6,nelblk)  = nfacel
+                 lcblk(7,nelblk)  = imattype
+                 lcblk(8,nelblk)  = ndofl
+                 lcblk(9,nelblk)  = nsymdl 
+                 lcblk(10,nelblk) = nshl ! # of shape functions per elt
 c
 c.... allocate memory for stack arrays
 c
-                allocate (mmat(nelblk)%p(npro))
-c
-                allocate (mien(nelblk)%p(npro,nshl))
-                allocate (mxmudmi(nelblk)%p(npro,maxsh))
-                if(usingpetsc.eq.0) then
+                 allocate (mien(nelblk)%p(npro,nshl))
+                 allocate (mxmudmi(nelblk)%p(npro,maxsh))
+                 if(usingpetsc.eq.0) then
                     allocate (mienG(nelblk)%p(1,1))
-                else
+                 else
                     allocate (mienG(nelblk)%p(npro,nshl))
-                endif
-                ! note mienG will be passed to gensav but nothing filled if not 
-                ! using PETSc so this is safe
+                 endif
+                 ! note mienG will be passed to gensav but nothing filled if not 
+                 ! using PETSc so this is safe
 c
 c.... save the element block
 c
-                n1=n
-                n2=n+npro-1
-                mater=1   ! all one material for now
-                call gensav (ientp(n1:n2,1:nshl),
-     &                       mater,           mien(nelblk)%p,
-     &                       mienG(nelblk)%p,
-     &                       mmat(nelblk)%p)
-                iel=iel+npro
-             enddo
+c                n1=n
+c                n2=n+npro-1
+c                mater=1   ! all one material for now
+c                call gensav (ientp(n1:n2,1:nshl),
+c     &                       mater,           mien(nelblk)%p,
+c     &                       mienG(nelblk)%p,
+c     &                       mmat(nelblk)%p)
+                 call gensav (mien(nelblk)%p,mienG(nelblk)%p)
+                 iel=iel+npro
+                 if (iptr > neltp) exit blocks_loop
+               enddo blocks_loop
+             enddo material_loop
            endif
-           deallocate(ientp)
+           deallocate(ientp,ientmp)
+           deallocate(mattype,neltp_mattype)
         enddo
 
         lcblk(1,nelblk+1) = iel
