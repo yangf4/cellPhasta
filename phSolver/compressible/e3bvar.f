@@ -4,7 +4,7 @@
      &                     u1,      u2,      u3,      rho,     ei,
      &                     cp,      rk,      
      &                     rou,     p,       tau1n,   tau2n,   tau3n,
-     &                     heat,    dNadx)
+     &                     heat,    dNadx,   materb)
 c
 c----------------------------------------------------------------------
 c
@@ -79,7 +79,7 @@ c
      &            gamb(npro),              c(npro),
      &            tmp(npro),
      &            v1(npro,nsd),            v2(npro,nsd)
-
+        integer, intent(in) :: materb
         integer   aa
 c
 c.... ------------------->  integration variables  <--------------------
@@ -118,11 +118,13 @@ c
 
         ithm = 6
         if (Navier .eq. 1) ithm = 7
-        call getthm (pres,            T,                  temp,
-     &               rk,              rho,                ei,
-     &               h,               tmp,                cv,
-     &               cp,              alfap,              betaT,
-     &               gamb,            c)
+c        call getthm (pres,            T,                  temp,
+c     &               rk,              rho,                ei,
+c     &               h,               tmp,                cv,
+c     &               cp,              alfap,              betaT,
+c     &               gamb,            c)
+         call getthm(rho, ei,  pres, T, npro, materb
+     &,              h,   cv,  cp,   alfap, betaT, tmp,  tmp)
 c
 c.... ---------------------->  Element Metrics  <-----------------------
 c

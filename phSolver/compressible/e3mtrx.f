@@ -2,6 +2,7 @@
      &                     ei,     h,	   alfap,
      &                     betaT,  cp,     rk,
      &                     u1,     u2,   u3,
+     &                     um1,    um2,  um3, 
      &                     A0,     A1,    
      &                     A2,     A3,
      &                     e2p,    e3p,    e4p,
@@ -26,6 +27,9 @@ c  rk    (npro)         : kinetic energy
 c  u1    (npro)         : x1-velocity component
 c  u2    (npro)         : x2-velocity component
 c  u3    (npro)         : x3-velocity component
+c  um1    (npro)         : ALE x1-velocity component
+c  um2    (npro)         : ALE x2-velocity component
+c  um3    (npro)         : ALE x3-velocity component
 c
 c output:
 c  A0    (npro,nflow,nflow)  : A0 matrix   
@@ -54,6 +58,7 @@ c
      &            rk(npro),
      &            u1(npro),                 u2(npro),
      &            u3(npro),                 fact1(npro),
+     &            um1(npro), um2(npro), um3(npro),
      &            A0(npro,nflow,nflow),     dVdY(npro,15),   
      &            A1(npro,nflow,nflow),     A2(npro,nflow,nflow),
      &            A3(npro,nflow,nflow),     A0DC(npro,4),
@@ -127,101 +132,105 @@ covered above       A0(:,5,1) = drdp * u1
 c
    !      flops = flops + 67*npro
 c
+c.... ALE version of A_1, A_2 and A_3
 c.... Calculate A-tilde-1, A-tilde-2 and A-tilde-3
 c
-        A1(:,1,1) = drdp * u1
+        A1(:,1,1) = drdp * (u1 - um1)
         A1(:,1,2) = rho
 c       A1(:,1,3) = zero
 c       A1(:,1,4) = zero
-        A1(:,1,5) = drdT * u1
+        A1(:,1,5) = drdT * (u1 - um1)
 c
-        A1(:,2,1) = drdp * u1 * u1 +1
-        A1(:,2,2) = two *rho  * u1
+        A1(:,2,1) = drdp * (u1 - um1) * u1 +1
+        A1(:,2,2) = rho  * (u1 - um1) + rho * u1
 c       A1(:,2,3) = zero
 c       A1(:,2,4) = zero
-        A1(:,2,5) = drdT * u1 * u1
+        A1(:,2,5) = drdT * (u1 - um1) * u1
 c
-        A1(:,3,1) = drdp * u1 * u2 
+        A1(:,3,1) = drdp * (u1 - um1) * u2 
         A1(:,3,2) = rho  * u2
-        A1(:,3,3) = rho  * u1
+        A1(:,3,3) = rho  * (u1 - um1)
 c       A1(:,3,4) = zero
-        A1(:,3,5) = drdT * u1 * u2
+        A1(:,3,5) = drdT * (u1 - um1) * u2
 c
-        A1(:,4,1) = drdp * u1 * u3 
+        A1(:,4,1) = drdp * (u1 - um1) * u3 
         A1(:,4,2) = rho  * u3
 c       A1(:,4,3) = zero
-        A1(:,4,4) = rho  * u1
-        A1(:,4,5) = drdT * u1 * u3
+        A1(:,4,4) = rho  * (u1 - um1)
+        A1(:,4,5) = drdT * (u1 - um1) * u3
 c
-        A1(:,5,1) = u1 * e2p
-        A1(:,5,2) = e3p + rho * u1 * u1
-        A1(:,5,3) = rho * u1 * u2
-        A1(:,5,4) = rho * u1 * u3
-        A1(:,5,5) = u1 * e4p
+c        A1(:,5,1) = (u1 - um1) * e2p
+      A1(:,5,1) = u1*e2p - um1*A0(:,5,1)
+        A1(:,5,2) = e3p + rho * (u1 - um1) * u1
+        A1(:,5,3) = rho * (u1 - um1) * u2
+        A1(:,5,4) = rho * (u1 - um1) * u3
+        A1(:,5,5) = (u1 - um1) * e4p
 c
    !      flops = flops + 35*npro
 c
-        A2(:,1,1) = drdp * u2
+        A2(:,1,1) = drdp * (u2 - um2)
 c       A2(:,1,2) = zero
         A2(:,1,3) = rho
 c       A2(:,1,4) = zero
-        A2(:,1,5) = drdT * u2
+        A2(:,1,5) = drdT * (u2 - um2)
 c
-        A2(:,2,1) = drdp * u1 * u2 
-        A2(:,2,2) = rho  * u2
+        A2(:,2,1) = drdp * u1 * (u2 - um2)
+        A2(:,2,2) = rho  * (u2 - um2)
         A2(:,2,3) = rho  * u1
 c       A2(:,2,4) = zero
-        A2(:,2,5) = drdT * u1 * u2
+        A2(:,2,5) = drdT * u1 * (u2 - um2)
 c
-        A2(:,3,1) = drdp * u2 * u2 +1
+        A2(:,3,1) = drdp * (u2 - um2) * u2 + 1
 c       A2(:,3,2) = zero
-        A2(:,3,3) = two * rho  * u2
+        A2(:,3,3) = rho  * (u2 - um2) + rho * u2
 c       A2(:,3,4) = zero
-        A2(:,3,5) = drdT * u2 * u2
+        A2(:,3,5) = drdT * (u2 - um2) * u2
 c
-        A2(:,4,1) = drdp * u2 * u3 
+        A2(:,4,1) = drdp * (u2 - um2) * u3 
 c       A2(:,4,2) = zero
         A2(:,4,3) = rho  * u3
-        A2(:,4,4) = rho  * u2
-        A2(:,4,5) = drdT * u2 * u3
+        A2(:,4,4) = rho  * (u2 - um2)
+        A2(:,4,5) = drdT * (u2 - um2) * u3
 c
-        A2(:,5,1) = u2 * e2p
-        A2(:,5,2) = rho * u1 * u2
-        A2(:,5,3) = e3p + rho * u2 * u2
-        A2(:,5,4) = rho * u2 * u3
-        A2(:,5,5) = u2 * e4p
+c        A2(:,5,1) = (u2 - um2) * e2p
+        A2(:,5,1) = u2 * e2p - um2 * A0(:,5,1)
+        A2(:,5,2) = rho * u1 * (u2 - um2)
+        A2(:,5,3) = e3p + rho * (u2 - um2) * u2
+        A2(:,5,4) = rho * (u2 - um2) * u3
+        A2(:,5,5) = (u2 - um2) * e4p
 c
    !      flops = flops + 35*npro
 c
-        A3(:,1,1) = drdp * u3
+        A3(:,1,1) = drdp * (u3 - um3)
 c       A3(:,1,2) = zero
 c       A3(:,1,3) = zero
         A3(:,1,4) = rho
-        A3(:,1,5) = drdT * u3
+        A3(:,1,5) = drdT * (u3 - um3)
 c
-        A3(:,2,1) = drdp * u1 * u3 
-        A3(:,2,2) = rho  * u3
+        A3(:,2,1) = drdp * u1 * (u3 - um3) 
+        A3(:,2,2) = rho  * (u3 - um3)
 c       A3(:,2,3) = zero
         A3(:,2,4) = rho  * u1
-        A3(:,2,5) = drdT * u1 * u3
+        A3(:,2,5) = drdT * u1 * (u3 - um3)
 c
-        A3(:,3,1) = drdp * u3 * u2 
+        A3(:,3,1) = drdp * (u3 - um3) * u2 
 c       A3(:,3,2) = zero
-        A3(:,3,3) = rho  * u3
+        A3(:,3,3) = rho  * (u3 - um3)
         A3(:,3,4) = rho  * u2
-        A3(:,3,5) = drdT * u3 * u2
+        A3(:,3,5) = drdT * (u3 - um3) * u2
 c
-        A3(:,4,1) = drdp * u3 * u3 +1
+        A3(:,4,1) = drdp * (u3 - um3) * u3 + 1
 c       A3(:,4,2) = zero
 c       A3(:,4,3) = zero
-        A3(:,4,4) = two *rho  * u3
-        A3(:,4,5) = drdT * u3 * u3
+        A3(:,4,4) = rho  * u3 + rho * (u3 - um3)
+        A3(:,4,5) = drdT * (u3 - um3) * u3
 c
-        A3(:,5,1) = u3 * e2p
-        A3(:,5,2) = rho * u1 * u3
-        A3(:,5,3) = rho * u2 * u3
-        A3(:,5,4) = e3p + rho * u3 * u3
-        A3(:,5,5) = u3 * e4p
+c        A3(:,5,1) = (u3 - um3) * e2p
+        A3(:,5,1) = u3 * e2p - um3 * A0(:,5,1)
+        A3(:,5,2) = rho * u1 * (u3 - um3)
+        A3(:,5,3) = rho * u2 * (u3 - um3)
+        A3(:,5,4) = e3p + rho * (u3 - um3) * u3
+        A3(:,5,5) = (u3 - um3) * e4p
 c
    !      flops = flops + 35*npro
 	ttim(21) = ttim(21) + secs(0.0)

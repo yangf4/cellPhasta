@@ -2,6 +2,7 @@
      &                     rho,       rmu,         cp,
      &                     cv,        con,         T,
      &                     u1,        u2,          u3, 
+     &                     um1,       um2,         um3,
      &                     rLyi,      dxidx,       tau,   
      &                     ri,        rmi,         rk,
      &                     dui,       aci,         A0,
@@ -83,6 +84,7 @@ c
      &            compK(npro,10),            ac1(npro),
      &            ac2(npro),                 ac3(npro)
 c
+        dimension um1(npro),   um2(npro),   um3(npro)
         real*8    rerrl(npro,nshl,6), tmp(npro), tmp1(npro)
         ttim(24) = ttim(24) - secs(0.0)
 c
@@ -187,6 +189,7 @@ c.... in the first incarnation we will ONLY have a diagonal tau here
 
           call e3tau  (rho,             cp,		rmu,
      &         u1,              u2,             u3,
+     &         um1,             um2,            um3,
      &         con,             dxidx,          rLyi,  
      &         rLymi,           tau,            rk,
      &         giju,            rTLS,           raLS,

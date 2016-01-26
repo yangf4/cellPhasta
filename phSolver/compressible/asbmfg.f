@@ -15,7 +15,7 @@ c
         dimension y(nshg,ndofl),           x(numnp,nsd),
      &            shpb(nshl,ngaussb),
      &            shglb(nsd,nshl,ngaussb),        
-     &            ienb(npro,nshl),          materb(npro),
+     &            ienb(npro,nshl),
      &            iBCB(npro,ndiBCB),        BCB(npro,nshlb,ndBCB),
      &            res(nshg,nflow),         rmes(nshg,nflow)
 c
@@ -25,6 +25,7 @@ c
      &            EGmass(npro, nshl, nshl) 
 c        
         dimension sgn(npro,nshl)
+        integer, intent(in) :: materb
 c
 c.... create the matrix of mode signs for the hierarchic basis 
 c     functions. 
@@ -52,7 +53,7 @@ c
  !  properly from this location.
 c
         call e3b  (ycl,     ycl,     iBCB,    BCB,     shpb,    shglb,
-     &             xlb,     rl,      rml,     sgn,     EGmass)
+     &             xlb,     rl,      rml,     sgn,     EGmass,  materb)
 
         !assemble the residual and the modified residual
         call local(res,    rl,     ienb,   nflow,  'scatter ')

@@ -1,5 +1,6 @@
       subroutine e3tau  (rho,    cp,     rmu, 	
      &                     u1,     u2,     u3,
+     &                     um1,    um2,    um3,
      &                     con,    dxidx,  rLyi,
      &                     rLymi,  tau,    rk, 
      &                     giju,   rTLS,   raLS,
@@ -20,6 +21,9 @@ c  cp     (npro)           : specific heat at constant pressure
 c  u1     (npro)           : x1-velocity component
 c  u2     (npro)           : x2-velocity component
 c  u3     (npro)           : x3-velocity component
+c  um1     (npro)           : ALE x1-velocity component
+c  um2     (npro)           : ALE x2-velocity component
+c  um3     (npro)           : ALE x3-velocity component
 c  dxidx  (npro,nsd,nsd)   : inverse of deformation gradient
 c  rLyi   (npro,nflow)      : least-squares residual vector
 c  rLymi   (npro,nflow)     : modified least-squares residual vector
@@ -39,6 +43,8 @@ c
       dimension rho(npro),                 con(npro), 
      &            cp(npro),                  u1(npro),
      &            u2(npro),                  u3(npro),
+     &            um1(npro),                 um2(npro), 
+     &            um3(npro),                             !FOR ALE 
      &            dxidx(npro,nsd,nsd),       rk(npro),
      &            tau(npro,5),               rLyi(npro,nflow),
      &            rLymi(npro,nflow),         dVdY(npro,15), 
@@ -154,9 +160,14 @@ c     fff = 144.0d0
       endif           
          dts = dtsfct*Dtgl
          tau(:,2)=rho**2*((two*dts)**2
-     &        + u1*(u1*gijd(:,1) + two*(u2*gijd(:,2)+u3*gijd(:,4)))
-     &        + u2*(u2*gijd(:,3) + two*u3*gijd(:,5))
-     &        + u3*u3*gijd(:,6))
+c     &        + u1*(u1*gijd(:,1) + two*(u2*gijd(:,2)+u3*gijd(:,4)))
+c     &        + u2*(u2*gijd(:,3) + two*u3*gijd(:,5))
+c     &        + u3*u3*gijd(:,6))
+c... ALE
+     &        + (u1 - um1)*((u1 - um1)*gijd(:,1)
+     &        + two*((u2 - um2)*gijd(:,2) + (u3 - um3)*gijd(:,4)))
+     &        + (u2 - um2)*((u2 - um2)*gijd(:,3) + two*(u3-um3)*gijd(:,5))
+     &        + (u2 - um2)*(u2 - um2)*gijd(:,6))
      &        +fff*rmu**2*(gijd(:,1)**2 + gijd(:,3)**2 + gijd(:,6)**2 +
      &        two*(gijd(:,2)**2 + gijd(:,4)**2 + gijd(:,5)**2))
          fact=sqrt(tau(:,2))

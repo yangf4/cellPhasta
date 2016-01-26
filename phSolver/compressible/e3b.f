@@ -1,5 +1,5 @@
        subroutine e3b (yl,      ycl,  iBCB,    BCB,     shpb,    shglb,
-     &                 xlb,     rl,   rml,     sgn,     EGmass)
+     &                 xlb,     rl,   rml,     sgn,     EGmass,  materb)
 c
 c----------------------------------------------------------------------
 c
@@ -92,6 +92,7 @@ c
 c
         dimension xmudum(npro,ngauss)
         integer   aa, b
+        integer, intent(in) :: materb
 
         ttim(40) = ttim(40) - secs(0.0)
 
@@ -133,7 +134,7 @@ c
      &               rho,             ei,           cp,
      &               rk,              rou,          p,
      &               Fv2,             Fv3,          Fv4,
-     &               Fh5,             dNadx)
+     &               Fh5,             dNadx,        materb)
 c
 c.... ires = 1 or 3
 c
@@ -187,9 +188,10 @@ c
 c
 c.... get the material properties
 c
-        call getDiff (T,        cp,    rho,        ycl,
-     &                rmu,      rlm,   rlm2mu,     con, shape,
-     &                xmudum,   xlb)
+c        call getDiff (T,        cp,    rho,        ycl,
+c     &                rmu,      rlm,   rlm2mu,     con, shape,
+c     &                xmudum,   xlb)
+         call getdiff (rmu, rlm, rlm2mu, con, npro, materb)
 c
 c.... ------------------------>  viscous flux <------------------------
 c
