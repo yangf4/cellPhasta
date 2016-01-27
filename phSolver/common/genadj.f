@@ -1,6 +1,7 @@
       subroutine genadj (colm,         rowp, icnt )
 c     
       use pointer_data
+      use asadj_m
 c     
       include "common.h"
 c     
@@ -32,7 +33,21 @@ c
      &               mien(iblk)%p,  adjcnt )
          
       enddo
-      
+c
+c... modify sparse matrix wrt the interface blocks
+c
+      do iblkif = 1, nelblif
+c
+        iel   = lcblkif(1,iblkif)
+        nshl0 = lcblkif(13,iblkif)
+        nshl1 = lcblkif(14,iblkif)
+        npro  = lcblkif(1,iblkif+1) - iel
+c
+        call Asadj_if (row_fill_list, adjcnt, mienif0(iblkif)%p, mienif1(iblkif)%p,
+     &                 npro,nshl0,nshl1,nshg,nnz)
+c
+      enddo
+c
       call sumgatInt ( adjcnt, nshg, nnonzero)
       if ( myrank .eq. master) then
          write (*,*) 'Number of global nonzeros ',nnonzero

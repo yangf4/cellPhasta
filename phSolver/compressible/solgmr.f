@@ -365,9 +365,10 @@ c
      &			 x,         iBC,       BC,  
      &                   col,       row,       lhsk,         
      &                   res,       BDiag,     HBrg,      eBrg,
-     &                   yBrg,      Rcos,      Rsin,      iper,
-     &                   ilwork,    shp,       shgl,      shpb,
-     &                   shglb,     Dy,        rerr,      umesh)
+     &                   yBrg,      Rcos,      Rsin,      iper,      ilwork,
+     &                   shp,       shgl,      shpb,      shglb,
+     &                   shpif0,    shpif1,    shgif0,    shgif1,
+     &                   Dy,        rerr,      umesh)
 c
 c----------------------------------------------------------------------
 c
@@ -427,6 +428,8 @@ c
      &          shgl(MAXTOP,nsd,maxsh,MAXQPT), 
      &          shpb(MAXTOP,maxsh,MAXQPT),
      &          shglb(MAXTOP,nsd,maxsh,MAXQPT) 
+      real*8, dimension(maxtopif,    maxsh,maxqpt) :: shpif0, shpif1
+      real*8, dimension(maxtopif,nsd,maxsh,maxqpt) :: shgif0, shgif1
       real*8    rerr(nshg,10)
 c      
 c     
@@ -471,7 +474,7 @@ c
 c.... LU decompose the block diagonals
 c
       if (iprec .ne. 0) then
-         call i3LU (BDiag, res,  'LU_Fact ')
+         call i3LU (BDiag, res, nflow,  'LU_Fact ')
          if (numpe > 1) then
             call commu (BDiag  , ilwork, nflow*nflow  , 'out')
          endif
@@ -479,7 +482,7 @@ c
 c
 c.... block diagonal precondition residual
 c
-      call i3LU (BDiag, res,  'forward ')
+      call i3LU (BDiag, res, nflow,  'forward ')
 c
 c Check the residual for divering trend
 c
@@ -493,7 +496,7 @@ c.... Pre-precondition the LHS mass matrix and set up the sparse
 c     preconditioners
 c
 
-      if(lhs.eq.1) call Spsi3pre (BDiag,    lhsK,  col, row)
+      if(lhs.eq.1) call Spsi3pre (BDiag, lhsK, nflow, col, row)
 c     
 c.... copy res in uBrg(1)
 c     
@@ -538,7 +541,7 @@ c
 c
 c.... perform the A x product
 c
-            call SparseAp (iper,ilwork,iBC, col, row, lhsK,  temp)
+            call SparseAp (iper,ilwork,iBC, nflow, col, row, lhsK,  temp)
 c           call tnanq(temp,5, 'q_spAPrs')
 
 c     
@@ -582,7 +585,7 @@ c
 c
 c.... Au product  ( u_{i+1} <-- EGmass u_{i+1} )
 c
-            call SparseAp (iper, ilwork, iBC,
+            call SparseAp (iper, ilwork, iBC, nflow, 
      &                     col,  row,    lhsK,
      &                     uBrg(:,:,iKs+1) )
 c           call tnanq(uBrg(:,:,iKS+1),5, 'q_spAP')
@@ -718,7 +721,7 @@ c
 c     
 c.... back block-diagonal precondition the results 
 c
-      call i3LU (BDiag, Dy, 'backward')
+      call i3LU (BDiag, Dy, nflow, 'backward')
 c     
 c
 c.... output the statistics

@@ -9,6 +9,8 @@ c Farzin Shakib, Winter 1987.
 c Zdenek Johan,  Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
 c
+        use genint_m
+c
         include "common.h"
         include "mpif.h"
 
@@ -51,7 +53,7 @@ c
         ititle = char(12) // title(1:78)
 
         if (myrank == master) then
-          write (iecho,1100) ititle, numpe,  numnp,  numel,  numelb,
+          write (iecho,1100) ititle, numpe,  numnp,  numel,  numelb, numelif,
      &                               nen,    nfaces, nsd,    numflx
           write (iecho,1200)         iALE,   icoord, navier, irs,
      &                               iexec,  necho
@@ -142,6 +144,7 @@ c
 c.... generate the spatial integration rules
 c
         call genint
+        call genint_if
 
         ichem = 0
 c
@@ -218,8 +221,8 @@ c
         write (23,*)  scdiff(5),nsclr,isclr,nsolt
         write (23,*) " flxID(10,20), Force(3),HFlux, nsrflist(0:20)"
         write (23,*)  flxID(10,20), Force(3),HFlux, nsrflist(0:20)
-        write (23,*) " numnp,  numel,  numelb, numpbc, nen,    nfaces,"
-        write (23,*)  numnp,  numel,  numelb, numpbc, nen,    nfaces,
+        write (23,*) " numnp,  numel,  numelb, numelif, numpbc, nen,    nfaces,"
+        write (23,*)  numnp,  numel,  numelb, numelif, numpbc, nen,    nfaces,
      &                  numflx, ndof,   iALE,   icoord, navier,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
@@ -235,10 +238,9 @@ c
         write (23,*)" mcsyst, melCat, nenCat(8,3),    nfaCat(8,3)"
         write (23,*) mcsyst, melCat, nenCat(8,3),    nfaCat(8,3)
  
-        write (23,*)" lelCat, lcsyst, iorder, nenb, "  
-        write (23,*) lelCat, lcsyst, iorder, nenb,   
-     &                  nelblk, nelblb, ndofl,  nsymdl, nenl,   nfacel,
-     &                  nenbl,  intind, mattyp 
+        write (23,'(a,x,4i6)') "lelCat, lcsyst, iorder, nenb: ", lelCat, lcsyst, iorder, nenb
+        write (23,'(a,x,3i6)') "nelblk, nelblb, nelblif:      ", nelblk, nelblb, nelblif
+        write (23,*)    ndofl,  nsymdl, nenl,   nfacel, nenbl,  intind, mattyp 
         write (23,*)" E3nsd,  I3nsd,  nsymdf, ndofBC, ndiBCB, ndBCB,"
         write (23,*) E3nsd,  I3nsd,  nsymdf, ndofBC, ndiBCB, ndBCB,
      &                  Jactyp, jump,   ires,   iprec,  ibound,
@@ -338,6 +340,7 @@ c
      &  ' number of mesh nodes  . . . . . . . . . . . (numnp )=',i10//,
      &  ' number of elements  . . . . . . . . . . . . (numel )=',i10//,
      &  ' number of boundary elements . . . . . . . . (numelb)=',i10//,
+     &  ' number of interface elements . . . . . . .. (numelif)=',i10//,
      &  ' number of element nodes . . . . . . . . . . (nen   )=',i10//,
      &  ' number of element faces . . . . . . . . . . (nfaces)=',i10//,
      &  ' number of space dimensions  . . . . . . . . (nsd   )=',i10//,

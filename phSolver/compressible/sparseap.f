@@ -1,10 +1,11 @@
-      subroutine SparseAp(iper, ilwork, iBC, col, row,	lhsK,	p)   
+      subroutine SparseAp(iper, ilwork, iBC,  nvar, 
+     &                    col,  row,    lhsK, p)   
 
 C============================================================================
 C
 C "SparseAp": This routine performs the product of a sparsley stored matrix
-C 		lhsK(nflow*nflow, nnz_tot) and a vector p(nshg, nflow). The
-C		results of the product is returned in p(nshg, nflow).
+C             lhsK(nvar*nvar, nnz_tot) and a vector p(nshg, nvar). The
+C             results of the product is returned in p(nshg, nvar).
 C
 C Nahid Razmara, Spring 2000. (Sparse Matrix)
 C============================================================================
@@ -17,20 +18,20 @@ c.... Data declaration
 c
 	integer	col(nshg+1),	row(nnz*nshg), 
      &          iper(nshg),     ilwork(nlwork)
-	real*8	lhsK(nflow*nflow,nnz_tot)
-        real*8 	p(nshg,nflow),	q(nshg,nflow)
+	real*8	lhsK(nvar*nvar,nnz_tot)
+        real*8 	p(nshg,nvar),	q(nshg,nvar)
 c
 	real*8	tmp1,	tmp2,	tmp3,	tmp4,	tmp5
 c     
 c.... communicate:: copy the master's portion of uBrg to each slave
 c
       if (numpe > 1) then
-         call commu (p, ilwork, nflow  , 'out')
+         call commu (p, ilwork, nvar, 'out')
       endif
 c
 c.... local periodic boundary conditions (no communications)
 c
-        do j=1,nflow
+        do j=1,nvar
            p(:,j)=p(iper(:),j)
         enddo
 c
@@ -46,49 +47,18 @@ c
 c.... Perform Matrix-Vector (AP) product
 c
  	do i = 1, nshg 
-c
-	    tmp1 = 0.
-	    tmp2 = 0.
-	    tmp3 = 0.
-	    tmp4 = 0.
-	    tmp5 = 0.
-c
 	    do k = col(i), col(i+1)-1
-		j = row(k) 
 c
-               tmp1 = tmp1 + lhsK(1 ,k)*p(j,1)
-     1                     + lhsK(6 ,k)*p(j,2)
-     2                     + lhsK(11,k)*p(j,3)
-     3                     + lhsK(16,k)*p(j,4)
-     4                     + lhsK(21,k)*p(j,5)
-               tmp2 = tmp2 + lhsK(2 ,k)*p(j,1)
-     1                     + lhsK(7 ,k)*p(j,2)
-     2                     + lhsK(12,k)*p(j,3)
-     3                     + lhsK(17,k)*p(j,4)
-     4                     + lhsK(22,k)*p(j,5)
-               tmp3 = tmp3 + lhsK(3 ,k)*p(j,1)
-     1                     + lhsK(8 ,k)*p(j,2)
-     2                     + lhsK(13,k)*p(j,3)
-     3                     + lhsK(18,k)*p(j,4)
-     4                     + lhsK(23,k)*p(j,5)
-               tmp4 = tmp4 + lhsK(4 ,k)*p(j,1)
-     1                     + lhsK(9 ,k)*p(j,2)
-     2                     + lhsK(14,k)*p(j,3)
-     3                     + lhsK(19,k)*p(j,4)
-     4                     + lhsK(24,k)*p(j,5)
-               tmp5 = tmp5 + lhsK(5 ,k)*p(j,1)
-     1                     + lhsK(10,k)*p(j,2)
-     2                     + lhsK(15,k)*p(j,3)
-     3                     + lhsK(20,k)*p(j,4)
-     4                     + lhsK(25,k)*p(j,5)
-c  
+              j = row(k) 
+c
+               do ii = 1, nvar
+                  do jj = 1, nvar
+                     id = (jj - 1) * nvar + ii
+                     q(i,ii) = q(i,ii) + lhsK(id,k)*p(j,jj) 
+                  enddo
+               enddo
+c
 	    enddo
-
-	    q(i,1) = q(i,1) + tmp1
-	    q(i,2) = q(i,2) + tmp2
-	    q(i,3) = q(i,3) + tmp3
-	    q(i,4) = q(i,4) + tmp4
-	    q(i,5) = q(i,5) + tmp5
 	enddo
 
         
@@ -107,7 +77,7 @@ c
 c
 c.... send slave's copy of uBrg to the master
 c
-           call commu (p  , ilwork, nflow  , 'in ')
+           call commu (p  , ilwork, nvar, 'in ')
 c     
 c.... nodes treated on another processor are eliminated
 c     

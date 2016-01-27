@@ -1,4 +1,4 @@
-        subroutine i3LU (Diag, r, code)
+        subroutine i3LU (Diag, r, nvar, code)
 c
 c----------------------------------------------------------------------
 c
@@ -15,8 +15,8 @@ c                           .eq. 'backward', backward substitution
 c                           .eq. 'product ', product Diag.r
 c
 c output:
-c  Diag (nshg,nflow,nflow)  : LU decomp. of block diagonal
-c  r    (nshg,nflow)    : reduced residual
+c  Diag (nshg,nvar,nvar)  : LU decomp. of block diagonal
+c  r    (nshg,nvar)    : reduced residual
 c
 c
 c Note: the formulation used here is taken from Golub's "Matrix
@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
 c
         include "common.h"
 c
-        dimension Diag(nshg,nflow,nflow),        r(nshg,nflow)
+        dimension Diag(nshg,nvar,nvar),        r(nshg,nvar)
 c
         character*8 code
         
@@ -39,137 +39,93 @@ c
 c.... perform LU decomposition with the Diagonal terms inverted
 c
         if (code .eq. 'LU_Fact ') then
+c       
+        do i = 1, nvar
+          if (i .gt. 1) then
+            do j = i, nvar
+              do k = 1, i-1
+                Diag(:,i,j) = Diag(:,i,j)
+     &                      - Diag(:,i,k) * Diag(:,k,j)
+              enddo
+            enddo
+          endif
+c      
+          Diag(:,i,i) = one / Diag(:,i,i)
 c
-          Diag(:,1,1) = one   / Diag(:,1,1)
-c
-          Diag(:,2,1) = Diag(:,1,1) *  Diag(:,2,1)
-          Diag(:,3,1) = Diag(:,1,1) *  Diag(:,3,1)
-          Diag(:,4,1) = Diag(:,1,1) *  Diag(:,4,1)
-          Diag(:,5,1) = Diag(:,1,1) *  Diag(:,5,1)
-c
-          Diag(:,2,2) = Diag(:,2,2) - Diag(:,2,1) *  Diag(:,1,2)
-          Diag(:,2,3) = Diag(:,2,3) - Diag(:,2,1) *  Diag(:,1,3)
-          Diag(:,2,4) = Diag(:,2,4) - Diag(:,2,1) *  Diag(:,1,4)
-          Diag(:,2,5) = Diag(:,2,5) - Diag(:,2,1) *  Diag(:,1,5)
-          Diag(:,2,2) = one   / Diag(:,2,2)
-c
-          Diag(:,3,2) = Diag(:,2,2)*(Diag(:,3,2)
-     &                             - Diag(:,3,1) * Diag(:,1,2))
-          Diag(:,4,2) = Diag(:,2,2)*(Diag(:,4,2)
-     &                             - Diag(:,4,1) * Diag(:,1,2))
-          Diag(:,5,2) = Diag(:,2,2)*(Diag(:,5,2)
-     &                             - Diag(:,5,1) * Diag(:,1,2))
-c
-
-          Diag(:,3,3) = Diag(:,3,3) - Diag(:,3,1) * Diag(:,1,3)
-     &                              - Diag(:,3,2) * Diag(:,2,3)
-          Diag(:,3,4) = Diag(:,3,4) - Diag(:,3,1) * Diag(:,1,4)
-     &                              - Diag(:,3,2) * Diag(:,2,4)
-          Diag(:,3,5) = Diag(:,3,5) - Diag(:,3,1) * Diag(:,1,5)
-     &                              - Diag(:,3,2) * Diag(:,2,5)
-          Diag(:,3,3) = one   / Diag(:,3,3)
-c
-          Diag(:,4,3) = Diag(:,3,3) *(Diag(:,4,3)
-     &                              - Diag(:,4,1) * Diag(:,1,3)
-     &                              - Diag(:,4,2) * Diag(:,2,3))
-          Diag(:,5,3) = Diag(:,3,3) *(Diag(:,5,3)
-     &                              - Diag(:,5,1) * Diag(:,1,3)
-     &                              - Diag(:,5,2) * Diag(:,2,3))
-c
-          Diag(:,4,4) = Diag(:,4,4) - Diag(:,4,1) * Diag(:,1,4)
-     &                              - Diag(:,4,2) * Diag(:,2,4)
-     &                              - Diag(:,4,3) * Diag(:,3,4)
-          Diag(:,4,4) = one / Diag(:,4,4)
-c
-          Diag(:,5,4) = Diag(:,4,4) *(Diag(:,5,4)
-     &                              - Diag(:,5,1) * Diag(:,1,4)
-     &                              - Diag(:,5,2) * Diag(:,2,4)
-     &                              - Diag(:,5,3) * Diag(:,3,4))
-c
-          Diag(:,5,5) = Diag(:,5,5) - Diag(:,5,1) * Diag(:,1,5)
-     &                              - Diag(:,5,2) * Diag(:,2,5)
-     &                              - Diag(:,5,3) * Diag(:,3,5)
-     &                              - Diag(:,5,4) * Diag(:,4,5)
-          Diag(:,5,5) = one / Diag(:,5,5)
+          if (i .lt. nvar) then
+            do j = i+1, nvar
+              if (i .gt. 1) then 
+                do k = 1, i-1
+                  Diag(:,j,i) = Diag(:,j,i) 
+     &                        - Diag(:,j,k) * Diag(:,k,i)
+                enddo
+              endif
+              Diag(:,j,i) = Diag(:,i,i) * Diag(:,j,i)
+            enddo
+          endif
+        enddo
 c
 c  INACCURATE NOW     !      flops = flops + 110*nshg
 c
           return
-        endif
+        endif  ! end LU_fact
 c
 c.... perform forward reduction
 c
         if (code .eq. 'forward ') then
 c
-c         r(:,1) =  r(:,1) !no-op
-          r(:,2) =  r(:,2) - Diag(:,2,1) *  r(:,1) 
-          r(:,3) =  r(:,3) - Diag(:,3,1) *  r(:,1) 
-     &                     - Diag(:,3,2) *  r(:,2) 
-          r(:,4) =  r(:,4) - Diag(:,4,1) *  r(:,1) 
-     &                     - Diag(:,4,2) *  r(:,2) 
-     &                     - Diag(:,4,3) *  r(:,3) 
-          r(:,5) =  r(:,5) - Diag(:,5,1) *  r(:,1) 
-     &                     - Diag(:,5,2) *  r(:,2) 
-     &                     - Diag(:,5,3) *  r(:,3) 
-     &                     - Diag(:,5,4) *  r(:,4) 
+        do i = 2, nvar
+           do j = 1, i-1
+              r(:,i) = r(:,i) - Diag(:,i,j) * r(:,j)
+           enddo
+        enddo
 c
 c.... flop count
 c
 c  INACCURATE      !      flops = flops + 25*nshg
 c
           return
-        endif
+        endif ! end forward
 c
 c.... perform backward substitution
 c
         if (code .eq. 'backward') then
 c
-          r(:,5) = Diag(:,5,5) *   r(:,5)
-          r(:,4) = Diag(:,4,4) * ( r(:,4)
-     &                         -   r(:,5) * Diag(:,4,5) )
-          r(:,3) = Diag(:,3,3) * ( r(:,3) 
-     &                         -   r(:,5) * Diag(:,3,5)
-     &                         -   r(:,4) * Diag(:,3,4) )
-          r(:,2) = Diag(:,2,2) * ( r(:,2) 
-     &                         -   r(:,5) * Diag(:,2,5)
-     &                         -   r(:,4) * Diag(:,2,4)
-     &                         -   r(:,3) * Diag(:,2,3) )
-          r(:,1) = Diag(:,1,1) * ( r(:,1) 
-     &                         -   r(:,5) * Diag(:,1,5)
-     &                         -   r(:,4) * Diag(:,1,4)
-     &                         -   r(:,3) * Diag(:,1,3) 
-     &                         -   r(:,2) * Diag(:,1,2) )
+        r(:,nvar) = Diag(:,nvar,nvar) * r(:,nvar)
+        
+        do i = nvar-1, 1, -1
+           do j = i+1, nvar
+              r(:,i) = r(:,i) - r(:,j) * Diag(:,i,j)
+           enddo
+           r(:,i) = Diag(:,i,i) * r(:,i)
+        enddo
 c
 c.... flop count
 c
 !      flops = flops + 25*nshg
 
           return
-        endif
+        endif ! end backward
 c
 c.... perform product U.r
 c
         if (code .eq. 'product ') then
 c
-          r(:,1) = r(:,1) / Diag(:,1,1) + r(:,2) * Diag(:,1,2) +
-     &             r(:,3) * Diag(:,1,3) + r(:,4) * Diag(:,1,4) +
-     &             r(:,5) * Diag(:,1,5)
-          r(:,2) = r(:,2) / Diag(:,2,2) + 
-     &             r(:,3) * Diag(:,2,3) + r(:,4) * Diag(:,2,4) +
-     &             r(:,5) * Diag(:,2,5)
-          r(:,3) = r(:,3) / Diag(:,3,3) + 
-     &             r(:,4) * Diag(:,3,4) +
-     &             r(:,5) * Diag(:,3,5)
-          r(:,4) = r(:,4) / Diag(:,4,4) + 
-     &             r(:,5) * Diag(:,4,5)
-          r(:,5) = r(:,5) / Diag(:,5,5)
+        do i = 1, nvar
+           r(:,i) = r(:,i) / Diag(:,i,i)
+           if (i .lt. nvar) then
+              do j = i+1, nvar
+                 r(:,i) = r(:,i) + r(:,j) * Diag(:,i,j)
+              enddo
+           endif
+        enddo
 c
 c.... flop count
 c
 !      flops = flops + 40*nshg
 
           return
-        endif
+        endif ! end product
 c
         call error ('i3LU    ', code, 0)
 c
