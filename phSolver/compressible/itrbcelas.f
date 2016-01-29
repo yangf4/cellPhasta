@@ -1,8 +1,8 @@
-        subroutine itrBCElas (disp, iBC, BC, iper, ilwork)
+        subroutine itrBCElas (umesh, disp, iBC, BC, iper, ilwork)
 c
 c----------------------------------------------------------------------
 c
-c This program satisfies the boundary conditions on the Y-variables.
+c This program satisfies the boundary conditions on the mesh-elastic BCs.
 c
 c input:
 c  disp   (nshg,nelas)  : mesh-elastic displacement 
@@ -11,61 +11,84 @@ c  BC     (nshg,3)      : boundary condition constraint parameters
 c                         pass only 3 componenets to this subroutine
 c
 c output:
-c  disp   (nshg,nelas)  : Adjusted displacement value(s) corresponding
+c  disp   (nshg,nelas)  : Adjusted mesh displacement value(s) corresponding
 c                          to a constraint d.o.f.
 c  
 c----------------------------------------------------------------------
 c
         include "common.h"
 c
-        dimension disp(nshg,nelas),          iBC(nshg),
-     &            BC(nshg,3)
+        dimension umesh(nshg,nelas),        disp(nshg,nelas),
+     &            iBC(nshg),                BC(nshg,4)
 c
         dimension ilwork(nlwork),           iper(nshg)
-
-c        real*8 tmp(nshg), y1(nshg),q1(nshg)
-c        dimension rn1(nshg), rmagn1(nshg)
-c        real*8 limitcount(nflow)
-c        integer locmax(1),locmin(1)
 c
-c  limiting...ugly but sometimes the only way
-c 
-c        limitcount=0
-c        do i=1,nflow
-c           if(ylimit(1,i).gt.0) then
-c              locmax=maxloc(y(:,i))
-c              locmin=minloc(y(:,i))
-c              ymax=maxval(y(:,i))
-c              ymin=minval(y(:,i))
-c              write(33,34)i,ymax,ymin,1.*locmax,1.*locmin
-c          call flush(33)
-c              do j=1,numnp      ! only limit linear modes for now
-c                 ypc=y(j,i)
-c                 y(j,i)=min(ylimit(3,i),max(ylimit(2,i),y(j,i)))
-c                 if(ypc.ne.y(j,i) )limitcount(i)=limitcount(i)+one
-c              enddo
-c           endif
-c        enddo
-c        if(maxval(limitcount).gt.0) then
-c           write(33,34)myrank,(limitcount(j)/numnp,j=1,nflow)
-c           call flush(33)
-c        endif
-c 34     format(i5,5(2x,e14.7))
+c.... -----------------> Mesh Elastic Velocity <-----------------------
+c.... 3D
 c
-c.... ----------------------->  Displacement  <------------------------
-c.... displacement
+c.... x1-velocity, 3D
 c
-        where (btest(iBC,14))
-          disp(:,1) =  BC(:,1)
-        endwhere
+          where (ibits(iBC,14,3) .eq. 1)
+            umesh(:,1) = BC(:,1) - BC(:,2) * umesh(:,2)
+     &                           - BC(:,3) * umesh(:,3)
+            disp(:,1)  = umesh(:,1) * Delt(1)
+          endwhere
 c
-        where (btest(iBC,15))
-          disp(:,2) =  BC(:,2)
-        endwhere
+c.... x2-velocity, 3D
 c
-        where (btest(iBC,16))
-          disp(:,3) =  BC(:,3)
-        endwhere
+          where (ibits(iBC,14,3) .eq. 2)
+            umesh(:,2) = BC(:,1) - BC(:,2) * umesh(:,1)
+     &                           - BC(:,3) * umesh(:,3)
+            disp(:,2)  = umesh(:,2) * Delt(1)
+          endwhere
+c
+c.... x1-velocity and x2-velocity, 3D
+c
+          where (ibits(iBC,14,3) .eq. 3)
+            umesh(:,1) = BC(:,1) - BC(:,2) * umesh(:,3)
+            umesh(:,2) = BC(:,3) - BC(:,4) * umesh(:,3)
+            disp(:,1)  = umesh(:,1) * Delt(1)
+            disp(:,2)  = umesh(:,2) * Delt(1)
+          endwhere
+c
+c.... x3-velocity, 3D
+c
+          where (ibits(iBC,14,3) .eq. 4)
+            umesh(:,3) = BC(:,1) - BC(:,2) * umesh(:,1)
+     &                           - BC(:,3) * umesh(:,2)
+            disp(:,3)  = umesh(:,3) * Delt(1)
+          endwhere
+c
+c.... x1-velocity and x3-velocity, 3D
+c
+          where (ibits(iBC,14,3) .eq. 5)
+            umesh(:,1) = BC(:,1) - BC(:,2) * umesh(:,2)
+            umesh(:,3) = BC(:,3) - BC(:,4) * umesh(:,2)
+            disp(:,1)  = umesh(:,1) * Delt(1)
+            disp(:,3)  = umesh(:,3) * Delt(1)
+          endwhere
+c
+c.... x2-velocity and x3-velocity, 3D
+c
+          where (ibits(iBC,14,3) .eq. 6)
+            umesh(:,2) = BC(:,1) - BC(:,2) * umesh(:,1)
+            disp(:,2)  = umesh(:,2) * Delt(1)
+          endwhere
+c
+c.... x1-velocity, x2-velocity and x3-velocity, 3D
+c
+          where (ibits(iBC,14,3) .eq. 7)
+            umesh(:,1) =  BC(:,1)
+            umesh(:,2) =  BC(:,2)
+            umesh(:,3) =  BC(:,3) 
+            disp(:,1)  = umesh(:,1) * Delt(1)
+            disp(:,2)  = umesh(:,2) * Delt(1)
+            disp(:,3)  = umesh(:,3) * Delt(1)
+          endwhere
+c
+c       endif
+c
+c.... end of velocity
 c
 c.... communications
 c 

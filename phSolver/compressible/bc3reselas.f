@@ -16,7 +16,7 @@ c----------------------------------------------------------------------
 c
       include "common.h"
 c     
-      dimension iBC(nshg),             BC(nshg,nelas),  
+      dimension iBC(nshg),             BC(nshg,4),  
      &          elasres(nshg,nelas),   ilwork(nlwork),
      &          iper(nshg)
 c

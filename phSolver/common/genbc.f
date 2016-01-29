@@ -32,17 +32,14 @@ c
      &            iper(nshg)
 c
 c BCinp for each point has:
-c   D T P c11 c12 c13 M1 c21 c22 c23 M2 theta S1 S2 S3...
-c   1 2 3 4   5   6   7  8   9   10  11 12    13 14 15...
+c   D T P c11 c12 c13 M1 c21 c22 c23 M2 theta S1 S2 S3 S4 Ec11 Ec12 Ec13 EM1 Ec21 Ec22 Ec23 EM2 
+c   1 2 3 4   5   6   7  8   9   10  11 12    13 14 15 16  17   18   19  20   21   22   23  24
 c Remember, ndof=nsd+2+nsclr
 c
 c Arrays in the following 1 line are now dimensioned in readnblk
-c        dimension BCinp(numpbc,ndof+7)
+c        dimension BCinp(numpbc,ndof+20)
 c  
-      dimension BCtmp(nshg,ndof+7)
-c
-c ndof+7= 3(thermos) + (nsd-1)*(nsd+1) + nscalars + 1 (theta)
-c                       #vect *(vec dir +mag)
+      dimension BCtmp(nshg,ndof+20)  
 c
 c.... --------------------------->  Input  <---------------------------
 c
@@ -51,7 +48,7 @@ c
       BCtmp = zero
 c
       if(numpbc.ne.0) then  
-         do i = 1, ndof+7
+         do i = 1, ndof+20
             where (nBC(:) .ne. 0) BCtmp(:,i) = BCinp(nBC(:),i)
          enddo
          deallocate(BCinp)
@@ -88,7 +85,7 @@ c
       if(navier.eq.1)then ! zero navier means Euler simulation
          call genBC1 (BCtmp,  iBC,  BC)
       elseif(matflg(1,1).eq.0)then !  compressible code 
-         allocate(BCtmpg(nshg,ndof+7))
+         allocate(BCtmpg(nshg,ndof+20))
          allocate(BCg(nshg,ndofBC))
          allocate(iBCg(nshg))
          BCtmpg=BCtmp
@@ -160,7 +157,7 @@ c  iBC   (nshg)        : boundary condition code
 c  nBC   (nshg)        : boundary condition mapping array
 c
 c output:
-c  BCtmp    (nshg,ndof+6) : The constraint data for prescribed BC 
+c  BCtmp    (nshg,ndof+20) : The constraint data for prescribed BC 
 c
 c
 c----------------------------------------------------------------------
@@ -175,8 +172,8 @@ c
       dimension iBC(nshg),                  iper(nshg),
      &            x(numnp,nsd),             ilwork(nlwork)
 c
-      dimension  BCtmpSAV(nshg,ndof+7)
-      dimension  BCtmp(nshg,ndof+7),      fBC(nshg,ndofBC),
+      dimension  BCtmpSAV(nshg,ndof+20)
+      dimension  BCtmp(nshg,ndof+20),      fBC(nshg,ndofBC),
      &            e1(3),                    e2(3),
      &            elnrm(3),                 asum(numnp)
 c
@@ -736,7 +733,7 @@ c
 c
       integer iel, nod, can
       real*8 vec(3), leng, dp, bigdp, lil
-      real*8 x(numnp,nsd),BCtmp(nshg,ndof+7)
+      real*8 x(numnp,nsd),BCtmp(nshg,ndof+20)
       integer iBC(nshg), nsurf(nshg)
       integer gbits
       integer, allocatable :: ienb(:)

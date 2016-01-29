@@ -20,6 +20,9 @@ c
 c        + 1024 * iBC_11  + 2048* iBC_12 + 4096* iBC_13 + 8192* iBC_14
 c          perioidicity     spebc          axisym         deformwall
 c
+c        + 16384* iBC_15  + 32768*iBC_16 + 65536*iBC_17
+c          x1-mesh_disp     x2-mesh_disp   x3-mesh_disp
+c
 c  nBC   (nshg)        : Boundary Condition mapping array
 c
 c

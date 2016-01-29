@@ -165,18 +165,19 @@ c
          nflow = nsd + 2
       endif 
 c
-      if (impl(2) .gt. 0) then
-         nelas = nsd               ! FOR mesh-elastic 
-      else
-         nelas = 0
-      endif
-c
       ndof   = nsd + 2
       nsclr=impl(1)/100
       ndof=ndof+nsclr           ! number of sclr transport equations to solve
-      
-      ndofBC = ndof + I3nsd     ! dimension of BC array
-     &       + nelas            ! add nelas for mesh-elastic solve
+c      
+      if (impl(2) .gt. 0) then     ! Mesh-elastic is ON
+         nelas  = nsd              ! FOR mesh-elastic 
+         ndofBC = ndof + I3nsd     ! dimension of BC array
+     &          + nelas + I3nsd    ! add nelas for mesh-elastic solve
+      else
+         nelas  = 0
+         ndofBC = ndof + I3nsd     ! dimension of BC array
+      endif
+c
       ndiBCB = 2                ! dimension of iBCB array
       ndBCB  = ndof + 1         ! dimension of BCB array
       nsymdf = (ndof*(ndof + 1)) / 2 ! symm. d.o.f.'s
@@ -331,12 +332,12 @@ c
      & c_loc(intfromfile),ione, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
-         allocate( BCinp(numpbc,ndof+7) )
+         allocate( BCinp(numpbc,ndof+20) )
          nsecondrank=intfromfile(1)/numpbc
          allocate( BCinpread(numpbc,nsecondrank) )
          iBCinpsiz=intfromfile(1)
       else
-         allocate( BCinp(1,ndof+7) )
+         allocate( BCinp(1,ndof+20) )
          allocate( BCinpread(0,0) ) !dummy
          iBCinpsiz=intfromfile(1)
       endif
@@ -346,7 +347,7 @@ c
      & c_loc(BCinpread), iBCinpsiz, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
-         BCinp(:,1:(ndof+7))=BCinpread(:,1:(ndof+7))
+         BCinp(:,1:(ndof+20))=BCinpread(:,1:(ndof+20))
       else  ! sometimes a partition has no BC's
          deallocate(BCinpread)
          BCinp=0

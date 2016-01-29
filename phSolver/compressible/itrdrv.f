@@ -605,21 +605,17 @@ c
                       iprec=lhs
                       ndofelas = nshl * nelas
 c 
-c.... temporally generate iBC and BC
-c
-                     call geniBCElas(x,   iBC,  BC(:,ndof+2:ndof+4),
-     &                               umesh )
-c
-                     call itrBCElas(disp, iBC,  BC(:,ndof+2:ndof+4),
-     &                              iper, ilwork )
+                     call itrBCElas(umesh,  disp,  iBC, 
+     &                              BC(:,ndof+2:ndof+5),
+     &                              iper,   ilwork         )
 c                         
 c.... call to SolGMRElas ... For mesh-elastic solve
 c
-                     call SolGMRElas (x,          disp,     iBC,  BC,
-     &                       colm,     rowp,       meshq,  
-     &                       a(mHBrg), a(meBrg), 
-     &                       a(myBrg), a(mRcos),  a(mRsin), iper, 
-     &                       ilwork,   shp,       shgl,     elasDy)
+                     call SolGMRElas (x,        disp,      iBC,    BC,
+     &                                colm,     rowp,      meshq,  
+     &                                hBrg,     eBrg, 
+     &                                yBrg,     Rcos,      Rsin,     iper, 
+     &                                ilwork,   shp,       shgl,     elasDy)
 c
                   endif  ! end of switch for flow or scalar or mesh-elastic solve
 c     
@@ -678,8 +674,10 @@ c.... call itrCorrectElas ... and then itrBCElas ...
 c
                      call itrCorrectElas(disp, elasDy)
 c
-                     call itrBCElas(disp, iBC, BC(:,ndof+2:ndof+4),
-     &                              iper, ilwork)
+                     umesh = disp / Delt(1)
+                     call itrBCElas(umesh,  disp,  iBC, 
+     &                              BC(:,ndof+2:ndof+5),
+     &                              iper,   ilwork        )
 c
                      call itrCorrectElas(x, disp)
                      umesh = disp / Delt(1)
@@ -819,20 +817,22 @@ c.. writing ybar field if requested in each restart file
 !    &              shp,           shgl,      shpb,
 !    &              shglb,         nodflx,    ilwork)
                   
-c
-c.... print out the updated mesh and mesh quality for mesh-elastic solve
-c
-               if (impl(2) .eq. 1) then 
-                   call write_field(myrank, 'a', 'coord', 5, 
-     &                              x,      'd',  numnp,  nsd, lstep)
-                   call write_field(myrank, 'a', 'meshQ', 5, 
-     &                              meshq,  'd',  numel,  1,   lstep)
-               endif
                call timer ('Output  ')      !set up the timer
 
                !write the solution and time derivative 
                call restar ('out ',  yold, acold)  
-
+c
+c.... print out the updated mesh and mesh quality for mesh-elastic solve
+c
+               if (impl(2) .eq. 1) then 
+                   call write_field(
+     &                       myrank,'a'//char(0),'coord'//char(0),5,
+     &                       x,     'd'//char(0), numnp, nsd, lstep)
+                   call write_field(
+     &                       myrank,'a'//char(0),'meshQ'//char(0), 5, 
+     &                       meshq, 'd'//char(0), numel, 1,   lstep)
+               endif
+ 
                !Write the distance to wall field in each restart
                if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
                  call write_field(myrank,'a'//char(0),'dwal'//char(0),4,

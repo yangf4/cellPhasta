@@ -91,12 +91,12 @@ c
 c.... LU decompose the block diagonals
 c
         if (iprec .ne. 0)
-     &  call i3LU (BDiag, res,  'LU_Fact ')
+     &  call i3LU (BDiag, res, nflow, 'LU_Fact ')
         
 c
 c.... block diagonal precondition residual
 c
-        call i3LU (BDiag, res,  'forward ')
+        call i3LU (BDiag, res, nflow, 'forward ')
 c
 c.... initialize Dy
 c
@@ -343,7 +343,7 @@ ctoomuchmem      call i3Pcond (Binv,  Dy, ilwork, 'R_Pcond ')
 c     
 c.... back block-diagonal precondition the results 
 c
-      call i3LU (BDiag, Dy, 'backward')
+      call i3LU (BDiag, Dy, nflow, 'backward')
 c     
 c
 c.... output the statistics

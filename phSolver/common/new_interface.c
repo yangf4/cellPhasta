@@ -227,6 +227,10 @@ void countfieldstowriterestart()
     nfields++; /*dwal*/
   }
 
+  if (inpdat.impl(2) == 1) {
+    nfields = nfields + 2; 
+  }
+
   outpar.nsynciofieldswriterestart = nfields;
 
   if(workfc.myrank == 0) {

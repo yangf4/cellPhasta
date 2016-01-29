@@ -21,7 +21,7 @@ c
         include "common.h"
 c
         dimension iBC(nshg),       ien(npro,nshl),
-     &            BC(nshg,nelas),  Estiff(npro,ndofelas,ndofelas)
+     &            BC(nshg,4),  Estiff(npro,ndofelas,ndofelas)
 c
         integer iens(npro,nshl)
 c

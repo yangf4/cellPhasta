@@ -93,7 +93,7 @@ c
 c
 c.... satisfy the BCs on the implicit LHS
 c     
-          call bc3LHSElas (iBC, BC(:, ndof+2:ndof+4),
+          call bc3LHSElas (iBC, BC(:, ndof+2:ndof+5),
      &                     mien(iblk)%p, Estiff) 
 c
 c.... Fill-up the global sparse LHS mass matrix
@@ -130,13 +130,13 @@ c.... ---------------------->   post processing  <----------------------
 c
 c.... satisfy the BCs on the residual
 c
-      call bc3ResElas (iBC,     BC(:, ndof+2:ndof+4),
+      call bc3ResElas (iBC,     BC(:, ndof+2:ndof+5),
      &                 elasres, iper,    ilwork)
 c
 c.... satisfy the BCs on the block-diagonal preconditioner
 c
       if (iprec .ne. 0) then
-         call bc3BDgElas (iBC,       BC(:, ndof+2:ndof+4),
+         call bc3BDgElas (iBC,       BC(:, ndof+2:ndof+5),
      &                    elasBDiag, iper,    ilwork)
       endif
 c
