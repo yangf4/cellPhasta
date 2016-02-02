@@ -37,7 +37,7 @@ c
       use turbSA
       use wallData
       use fncorpmod
-c      use mesh_motion_m
+      use bc3lhs_m
 
         include "common.h"
         include "mpif.h"
@@ -496,9 +496,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       shp,           shgl,
      &                       shpb,          shglb,         
      &                       shpif0,        shpif1,        shgif0,        shgif1,
-     &                       umesh,
-     &                       solinc,
-     &                       rerr)
+     &                       solinc,        rerr,          umesh)
                     endif
                       else if (mod(impl(1),100)/10 .eq. 2) then ! mfg solve
 c     
@@ -604,6 +602,11 @@ c
                       lhs = 1  
                       iprec=lhs
                       ndofelas = nshl * nelas
+c
+                     disp = umesh * Delt(1)
+c
+                     call bc3elas_if (BC, iBC, disp, lcblkif, 
+     &                                nshg, ndofBC, nsd, nelblif, MAXBLK, ndof+2)
 c 
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
