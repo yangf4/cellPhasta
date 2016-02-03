@@ -16,6 +16,7 @@ c                          to a constraint d.o.f.
 c  
 c----------------------------------------------------------------------
 c
+        use bc3lhs_m
         include "common.h"
 c
         dimension umesh(nshg,nelas),        disp(nshg,nelas),

@@ -499,7 +499,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       solinc,        rerr,          umesh)
                     endif
                       else if (mod(impl(1),100)/10 .eq. 2) then ! mfg solve
-c     
+c'     
 c.... preconditioned matrix-free GMRES solver
 c     
                         lhs=0
@@ -594,7 +594,7 @@ c
      &                    iper,          ilwork,
      &                    shp,           shgl,
      &                    shpb,          shglb, solinc(1,isclr+5))
-c    
+c'    
                   endif  ! endif usingPETSc for scalar
 c
                   else if(isolve.eq.10) then ! this is a mesh-elastic solve
@@ -602,11 +602,10 @@ c
                       lhs = 1  
                       iprec=lhs
                       ndofelas = nshl * nelas
-c
-                     disp = umesh * Delt(1)
-c
-                     call bc3elas_if (BC, iBC, disp, lcblkif, 
-     &                                nshg, ndofBC, nsd, nelblif, MAXBLK, ndof+2)
+c 
+                     call bc3elas_if (BC(:,ndof+2:ndof+4),    iBC,  
+     &                                umesh, lcblkif,  nshg,  ndofBC,
+     &                                nsd,   nelblif,  MAXBLK )
 c 
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
