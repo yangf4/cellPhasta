@@ -38,6 +38,7 @@ c
       use wallData
       use fncorpmod
       use bc3lhs_m
+      use mesh_motion_m
 
         include "common.h"
         include "mpif.h"
@@ -594,7 +595,7 @@ c
      &                    iper,          ilwork,
      &                    shp,           shgl,
      &                    shpb,          shglb, solinc(1,isclr+5))
-c'    
+c    
                   endif  ! endif usingPETSc for scalar
 c
                   else if(isolve.eq.10) then ! this is a mesh-elastic solve
@@ -610,7 +611,7 @@ c
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
      &                              iper,   ilwork         )
-c                         
+c
 c.... call to SolGMRElas ... For mesh-elastic solve
 c
                      call SolGMRElas (x,        disp,      iBC,    BC,

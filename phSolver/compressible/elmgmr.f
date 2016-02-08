@@ -699,6 +699,9 @@ c
           endif
 c
         enddo
+c 
+c      write(*,*) 'umesh   65: ',umesh(65,:)
+c      write(*,*) 'umesh 2871: ',umesh(2871,:)
 c
         deallocate(sum_vi_area)
 c

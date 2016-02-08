@@ -11,13 +11,14 @@ c
         real*8, pointer, intent(in) :: p(:), n(:,:)
 c
         real*8, parameter :: alpha = 1.d0
-        real*8, parameter :: beta  = 1.d-5
+        real*8, parameter :: beta  = 1.d-6
 c
         integer :: isd
 c
         do isd = 1,nsd
 c
-          vi(:,isd) = beta * p**alpha * n(:,isd)
+c          vi(:,isd) = beta * p**alpha * n(:,isd)
+          vi(:,isd) = n(:,isd)
 c
         enddo
 c
