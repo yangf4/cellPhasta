@@ -1,15 +1,10 @@
-//MR CHANGE
-#define OMPI_SKIP_MPICXX 1
-//MR CHANGE END
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#include "commonM2N_c.h"
 
 #if !(defined IOSTREAMH)
 #include <iostream>
@@ -17,16 +12,14 @@
 using namespace std;
 #endif
 
+#define OMPI_SKIP_MPICXX 1
+#include <mpi.h>
+
 #include <FCMangle.h>
 #define input FortranCInterface_GLOBAL_(input,INPUT)
 #define timer FortranCInterface_GLOBAL_(timer,TIMER)
 
-#ifdef intel
-#include <direct.h>
-#define chdir _chdir
-#else
-#include <unistd.h>
-#endif
+#include "commonM2N_c.h"
 
 extern "C" char phasta_iotype[80];
 char phasta_iotype[80];
