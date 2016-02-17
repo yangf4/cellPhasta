@@ -38,7 +38,7 @@ c
       use wallData
       use fncorpmod
       use bc3lhs_m
-      use mesh_motion_m
+c      use mesh_motion_m
 
         include "common.h"
         include "mpif.h"
