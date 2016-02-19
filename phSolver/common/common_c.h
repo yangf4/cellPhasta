@@ -25,6 +25,7 @@
 #define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
 #define ctrlvar FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
 #define ductvar FortranCInterface_GLOBAL_(ductvar,DUCTVAR)
+#define alevar FortranCInterface_GLOBAL_(alevar, ALEVAR)
 #define shpdat FortranCInterface_GLOBAL_(shpdat,SHPDAT)
 #define datpnt FortranCInterface_GLOBAL_(datpnt,DATPNT)
 #define elmpar FortranCInterface_GLOBAL_(elmpar,ELMPAR)
@@ -319,8 +320,19 @@ extern "C" {
 		double EVrampMin;
 		double EVrampMax;
 	} ductvar;
-//////////////////////////////////////////
 
+  extern struct {
+    double raleF;
+    double raleA;
+    double raleX;
+    double raleY;
+    double raleLx;
+    double raleLy;
+    double raleRx;
+    double raleRy;
+    int ialeD;
+    int ialeT;
+  } alevar;
  
   extern struct { 
     double epsilon_ls;
@@ -420,6 +432,7 @@ extern "C" {
     int niter[MAXTS];
     int impl[MAXTS];
     double rhoinf[MAXTS];
+    double rhoinfS[MAXTS];
     int LHSupd[6];
     int loctim[MAXTS];
     double deltol[2][MAXTS];

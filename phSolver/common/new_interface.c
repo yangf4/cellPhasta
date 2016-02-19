@@ -227,7 +227,7 @@ void countfieldstowriterestart()
     nfields++; /*dwal*/
   }
 
-  if (inpdat.impl[1] == 1) {
+  if (conpar.iALE == 2) {
     nfields = nfields + 2; 
   }
 

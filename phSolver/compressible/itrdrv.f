@@ -195,7 +195,7 @@ c
 c
 c ... allocate mesh-elastic solve related arrays only if mesh-elastic solve flag/option is ON
 c
-        if (impl(2) .eq. 1) then 
+        if (iALE .gt. 0) then 
           meshq = one
           umesh = zero
         endif
@@ -408,7 +408,7 @@ c
             enddo
             endif
 c
-            if(impl(2).gt.0) then
+            if(iALE .eq. 2) then
 c
 c....   need itrPredict equivalent for 'disp'
 c
@@ -604,9 +604,9 @@ c
                       iprec=lhs
                       ndofelas = nshl * nelas
 c 
-                     call bc3elas_if (BC(:,ndof+2:ndof+4),    iBC,  
-     &                                umesh, lcblkif,  nshg,  ndofBC,
-     &                                nsd,   nelblif,  MAXBLK )
+c                     call bc3elas_if (BC(:,ndof+2:ndof+4),    iBC,  
+c     &                                umesh, lcblkif,  nshg,  ndofBC,
+c     &                                nsd,   nelblif,  MAXBLK )
 c 
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
@@ -827,7 +827,7 @@ c.. writing ybar field if requested in each restart file
 c
 c.... print out the updated mesh and mesh quality for mesh-elastic solve
 c
-               if (impl(2) .eq. 1) then 
+               if (iALE .gt. 0) then 
                    call write_field(
      &                       myrank,'a'//char(0),'coord'//char(0),5,
      &                       x,     'd'//char(0), numnp, nsd, lstep)

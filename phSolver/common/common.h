@@ -201,6 +201,9 @@ c...........................................................................
 c...........................................................................
 
 c
+        common /alevar/ raleF,   raleA,   raleX,   raleY,   raleLx,
+     &                  raleLy, raleRx,   raleRy,  ialeD,   ialeT
+c
         common /levlset/ epsilon_ls, epsilon_lsd, dtlset, iLSet, 
      &                   ivconstraint, iExpLSSclr1, iExpLSSclr2
 
@@ -236,7 +239,7 @@ c
         integer :: svLSType, svLSFlag
         common /inpdat/ epstol(6),  Delt(MAXTS),    CFLfl(MAXTS),
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),
-     &                  impl(MAXTS),    rhoinf(MAXTS),
+     &                  impl(MAXTS),    rhoinf(MAXTS),  rhoinfS(MAXTS),
      &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2), 
      &                  leslib,     svLSFlag,   svLSType
 c

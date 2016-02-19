@@ -60,7 +60,7 @@ c
 c
 c.... check the input parameters
 c
-          if (iALE .lt. 0 .or. iALE .gt. 1)
+          if (iALE .lt. 0 .or. iALE .gt. 2)
      &                     call error ('input   ','iALE    ',iALE)
 c
           if (icoord .lt. 0 .or. icoord .gt. 1)

@@ -14,6 +14,9 @@ c
       real*8, allocatable :: qold(:,:)
       real*8, allocatable :: uold(:,:)
       real*8, allocatable :: acold(:,:)
+      real*8, allocatable :: xn(:,:)
+      real*8, allocatable :: xdotold(:,:)
+      real*8, allocatable :: umesh(:,:)
       integer, allocatable :: iBCtmp(:)
       real*8, allocatable :: BCinp(:,:)
 
@@ -39,7 +42,8 @@ c
       include "common.h"
 
       real*8, target, allocatable :: xread(:,:), qread(:,:), acread(:,:)
-      real*8, target, allocatable :: uread(:,:)
+      real*8, target, allocatable :: uread(:,:), xnread(:,:)
+      real*8, target, allocatable :: xdotoldread(:,:), umeshread(:,:)
       real*8, target, allocatable :: BCinpread(:,:)
       real*8 :: iotime
       integer, target, allocatable :: iperread(:), iBCtmpread(:)
@@ -169,7 +173,7 @@ c
       nsclr=impl(1)/100
       ndof=ndof+nsclr           ! number of sclr transport equations to solve
 c      
-      if (impl(2) .gt. 0) then     ! Mesh-elastic is ON
+      if (iALE .eq. 2) then     ! Mesh-elastic is ON
          nelas  = nsd              ! FOR mesh-elastic 
          ndofBC = ndof + I3nsd     ! dimension of BC array
      &          + nelas + I3nsd    ! add nelas for mesh-elastic solve
@@ -543,6 +547,117 @@ c
          endif
          acold=zero
       endif
+
+c read in ALE stuff
+c read in displacement      
+      intfromfile=0
+      call phio_readheader(fhandle, 
+     & c_char_'xn' //char(0), 
+     & c_loc(intfromfile), ithree, dataInt, iotype)
+c      call readheader(irstin,fname1,intfromfile,
+c     &     ithree,'integer', iotype)
+      allocate( xn(numnp,nsd) )
+      if(intfromfile(1).ne.0) then 
+         numnp2=intfromfile(1)
+         nsd2=intfromfile(2)
+         lstep=intfromfile(3)
+         
+         if (numnp2 .ne. numnp) 
+     &        call error ('restar  ', 'numnp   ', numnp)
+c     
+         allocate( xnread(numnp,nsd2) )
+         xnread=zero
+
+         iacsiz=numnp*nsd2
+         call phio_readdatablock(fhandle,
+     &    c_char_'xn' // char(0),
+     &    c_loc(xnread), iacsiz, dataDbl,iotype)
+c         call readdatablock(irstin,fname1,xnread,iacsiz,
+c     &                   'double',iotype)
+         xn(:,1:nsd)=xnread(:,1:nsd)
+         deallocate(xnread)
+      else
+         if (myrank.eq.master) then
+           warning='Mesh coordinates set to original coordinates (SAFE)'
+            write(*,*) warning
+         endif
+         xn=point2x
+      endif
+c read in xdotold
+c      fname1='xdot?'
+      intfromfile=0
+      call phio_readheader(fhandle, 
+     & c_char_'xdot' //char(0), 
+     & c_loc(intfromfile), ithree, dataInt, iotype)
+c      call readheader(irstin,fname1,intfromfile,
+c     &     ithree,'integer', iotype)
+      allocate( xdotold(numnp,nsd) )
+      if(intfromfile(1).ne.0) then 
+         numnp2=intfromfile(1)
+         nsd2=intfromfile(2)
+         lstep=intfromfile(3)
+         
+         if (numnp2 .ne. numnp) 
+     &        call error ('restar  ', 'numnp   ', numnp)
+c     
+         allocate( xdotoldread(numnp,nsd2) )
+         xdotoldread=zero
+
+         iacsiz=numnp*nsd2
+
+         call phio_readdatablock(fhandle,
+     &    c_char_'xdot' // char(0),
+     &    c_loc(xdotoldread), iacsiz, dataDbl,iotype)
+c         call readdatablock(irstin,fname1,xdotoldread,iacsiz,
+c     &                   'double',iotype)
+c         xdotold(:,1:nsd)=xdotoldread(:,1:nsd)
+         deallocate(xdotoldread)
+      else
+         if (myrank.eq.master) then
+            warning='Time derivative of mesh displacement is set to zero (SAFE)'
+            write(*,*) warning
+         endif
+         xdotold=zero
+      endif
+c read in umesh
+c      fname1='umesh?'
+      intfromfile=0
+      call phio_readheader(fhandle, 
+     & c_char_'umesh' //char(0), 
+     & c_loc(intfromfile), ithree, dataInt, iotype)
+c      call readheader(irstin,fname1,intfromfile,
+c     &     ithree,'integer', iotype)
+      allocate( umesh(numnp,nsd) )
+      if(intfromfile(1).ne.0) then 
+         numnp2=intfromfile(1)
+         nsd2=intfromfile(2)
+         lstep=intfromfile(3)
+         
+         if (numnp2 .ne. numnp) 
+     &        call error ('restar  ', 'numnp   ', numnp)
+c     
+         allocate( umeshread(numnp,nsd2) )
+         umeshread=zero
+
+         iacsiz=numnp*nsd2
+         call phio_readdatablock(fhandle,
+     &    c_char_'umesh' // char(0),
+     &    c_loc(umeshread), iacsiz, dataDbl,iotype)
+c         call readdatablock(irstin,fname1,umeshread,iacsiz,
+c     &                   'double',iotype)
+         umesh(:,1:nsd)=umeshread(:,1:nsd)
+         deallocate(umeshread)
+      else
+         if (myrank.eq.master) then
+            warning='Mesh velocity is set to zero (SAFE)'
+            write(*,*) warning
+         endif
+         umesh=zero
+      endif
+c
+c.... end read ALE stuff
+c
+
 cc
 cc.... read the header and check it against the run data
 cc
