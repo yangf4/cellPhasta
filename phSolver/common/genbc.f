@@ -37,9 +37,9 @@ c   1 2 3 4   5   6   7  8   9   10  11 12    13 14 15 16  17   18   19  20   21
 c Remember, ndof=nsd+2+nsclr
 c
 c Arrays in the following 1 line are now dimensioned in readnblk
-c        dimension BCinp(numpbc,ndof+20)
+c        dimension BCinp(numpbc,24)
 c  
-      dimension BCtmp(nshg,ndof+20)  
+      dimension BCtmp(nshg,24)  
 c
 c.... --------------------------->  Input  <---------------------------
 c
@@ -48,7 +48,7 @@ c
       BCtmp = zero
 c
       if(numpbc.ne.0) then  
-         do i = 1, ndof+20
+         do i = 1, 24
             where (nBC(:) .ne. 0) BCtmp(:,i) = BCinp(nBC(:),i)
          enddo
          deallocate(BCinp)
@@ -85,7 +85,7 @@ c
       if(navier.eq.1)then ! zero navier means Euler simulation
          call genBC1 (BCtmp,  iBC,  BC)
       elseif(matflg(1,1).eq.0)then !  compressible code 
-         allocate(BCtmpg(nshg,ndof+20))
+         allocate(BCtmpg(nshg,24))
          allocate(BCg(nshg,ndofBC))
          allocate(iBCg(nshg))
          BCtmpg=BCtmp
@@ -157,7 +157,7 @@ c  iBC   (nshg)        : boundary condition code
 c  nBC   (nshg)        : boundary condition mapping array
 c
 c output:
-c  BCtmp    (nshg,ndof+20) : The constraint data for prescribed BC 
+c  BCtmp    (nshg,24) : The constraint data for prescribed BC 
 c
 c
 c----------------------------------------------------------------------
@@ -172,8 +172,8 @@ c
       dimension iBC(nshg),                  iper(nshg),
      &            x(numnp,nsd),             ilwork(nlwork)
 c
-      dimension  BCtmpSAV(nshg,ndof+20)
-      dimension  BCtmp(nshg,ndof+20),      fBC(nshg,ndofBC),
+      dimension  BCtmpSAV(nshg,24)
+      dimension  BCtmp(nshg,24),      fBC(nshg,ndofBC),
      &            e1(3),                    e2(3),
      &            elnrm(3),                 asum(numnp)
 c
@@ -733,7 +733,7 @@ c
 c
       integer iel, nod, can
       real*8 vec(3), leng, dp, bigdp, lil
-      real*8 x(numnp,nsd),BCtmp(nshg,ndof+20)
+      real*8 x(numnp,nsd),BCtmp(nshg,24)
       integer iBC(nshg), nsurf(nshg)
       integer gbits
       integer, allocatable :: ienb(:)

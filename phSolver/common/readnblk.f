@@ -336,12 +336,12 @@ c
      & c_loc(intfromfile),ione, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
-         allocate( BCinp(numpbc,ndof+20) )
+         allocate( BCinp(numpbc,24) )
          nsecondrank=intfromfile(1)/numpbc
          allocate( BCinpread(numpbc,nsecondrank) )
          iBCinpsiz=intfromfile(1)
       else
-         allocate( BCinp(1,ndof+20) )
+         allocate( BCinp(1,24) )
          allocate( BCinpread(0,0) ) !dummy
          iBCinpsiz=intfromfile(1)
       endif
@@ -351,7 +351,7 @@ c
      & c_loc(BCinpread), iBCinpsiz, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
-         BCinp(:,1:(ndof+20))=BCinpread(:,1:(ndof+20))
+         BCinp(:,1:(24))=BCinpread(:,1:(24))
       else  ! sometimes a partition has no BC's
          deallocate(BCinpread)
          BCinp=0

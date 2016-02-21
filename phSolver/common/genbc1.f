@@ -23,7 +23,7 @@ c
       include "common.h"
         
 c
-        dimension BCtmp(nshg,ndof+20),    iBC(nshg),
+        dimension BCtmp(nshg,24),    iBC(nshg),
      &            BC(nshg,ndofBC),tmpbc(4)
 c
         dimension tmp(nshg)

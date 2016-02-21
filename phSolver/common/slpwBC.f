@@ -4,7 +4,7 @@
       
        integer nslpw,ihis,iBCg,iBC
        real*8 BCg(ndofBC)
-       real*8 BCtmpg(ndof+20)
+       real*8 BCtmpg(24)
        real*8 BC(ndofBC)
        real*8 wlnorm(3,9)
        real*8 c4,c5,c6,c7
