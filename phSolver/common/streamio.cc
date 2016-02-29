@@ -36,6 +36,15 @@ void streamio_setup_write(phio_fp* f, RStream* rs) {
   sf->rs = rs;
 }
 
+void streamio_geom_write(phio_fp* f, GRStream* grs) {
+  *f = (phio_fp) malloc(sizeof(struct streamio_file));
+  stream_fp sf = (stream_fp) *f;
+  sf->ops = &stream_ops;
+  sf->mode = 'w';
+  sf->grs = grs;
+  sf->rs = NULL;
+}
+
 void streamio_set_gr(grstream grs) {
   geomRestartStream = grs;
 }

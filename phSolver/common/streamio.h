@@ -7,6 +7,7 @@ extern "C" {
 #endif
 void streamio_setup_read(phio_fp* f, grstream grs);
 void streamio_setup_write(phio_fp* f, rstream rs);
+void streamio_geom_write(phio_fp* f, grstream grs);
 void streamio_set_gr(grstream grs);
 grstream streamio_get_gr();
 void streamio_set_r(rstream rs);

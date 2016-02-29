@@ -62,8 +62,6 @@ c
        do i = 1, npro
           if (meshq(i) .ge. 1.0 ) write(*,*) 'Meshq larger than one.'
           if (meshq(i) .le. 0.0 ) then 
-             meshq(i) = 1e-10
-             meshV(i) = 1e-10
              write(*,*) 'Meshq smaller than zero.'
           endif
        enddo

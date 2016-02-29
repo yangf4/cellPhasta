@@ -829,11 +829,11 @@ c.... print out the updated mesh and mesh quality for mesh-elastic solve
 c
                if (iALE .gt. 0) then 
                    call write_field(
-     &                       myrank,'a'//char(0),'coord'//char(0),5,
-     &                       x,     'd'//char(0), numnp, nsd, lstep)
-                   call write_field(
-     &                       myrank,'a'//char(0),'meshQ'//char(0), 5, 
-     &                       meshq, 'd'//char(0), numel, 1,   lstep)
+     &                  myrank,'a'//char(0),'motion_coords'//char(0),13,
+     &                  x,     'd'//char(0), numnp, nsd, lstep)
+c                   call write_field(
+c     &                       myrank,'a'//char(0),'meshQ'//char(0), 5, 
+c     &                       meshq, 'd'//char(0), numel, 1,   lstep)
                endif
  
                !Write the distance to wall field in each restart

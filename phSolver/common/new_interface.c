@@ -228,7 +228,8 @@ void countfieldstowriterestart()
   }
 
   if (conpar.iALE == 2) {
-    nfields = nfields + 2; 
+//hardcoded, it should be + 2, including meshQ
+    nfields = nfields + 1; 
   }
 
   outpar.nsynciofieldswriterestart = nfields;
@@ -276,6 +277,12 @@ Write_Restart(  int* pid,
       streamio_setup_write(&f_descriptor, streamio_get_r());
     else if(outpar.output_mode == 0 )
       posixio_setup(&f_descriptor, 'w');
+//... DEBUGGING
+//    if(outpar.output_mode == -1 ) {
+//      streamio_setup_write(&f_descriptor, streamio_get_r());
+//      posixio_setup(&f_descriptor, 'w');
+//    }
+//... END DEBUGGING
     else if(outpar.output_mode > 0 )
       syncio_setup_write(nfiles, nfields, numparts/nfiles, &f_descriptor);
     else
