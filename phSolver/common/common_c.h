@@ -249,6 +249,7 @@ extern "C" {
     int numflx;
     int ndof;
     int iALE;
+    int iMsIpSc;
     int icoord;
     int navier;
     int irs;

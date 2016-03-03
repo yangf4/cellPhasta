@@ -157,7 +157,7 @@ c
 
         common /conpar/ numnp,    numel,  numelb, numelif,
      &                  numpbc,   nen,    nfaces,
-     &                  numflx,   ndof,   iALE,   icoord, navier,
+     &                  numflx,   ndof,   iALE,   iMsIpSc,icoord, navier,
      &                  irs,      iexec,  necho,  ichem,  iRK,    nedof,
      &                  ndofelas, nshg,   nnz,    istop,  nflow,  nelas, 
      &                  nnz_tot,  idtn,

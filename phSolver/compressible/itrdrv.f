@@ -325,7 +325,8 @@ c============ Start the loop of time steps============================c
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 c
-          call tempMeshMo( x, umesh, iBC, BC(:,ndof+2:ndof+5) )
+          if ( iMsIpSc .eq. 1 )
+     &      call tempMeshMo( x, umesh, iBC, BC(:,ndof+2:ndof+5) )
 c        
         if(iramp.eq.1) 
      &        call BCprofileScale(vbc_prof,BC,yold)
@@ -395,10 +396,11 @@ c
             call itrPredict(   yold,    acold,    y,   ac )
 c
 c...-------------> HARDCODED <-----------------------
-c
-c            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
-      call tempitrBC (y,ac, iBC, BC, iper, ilwork, x, umesh)
-c
+            if (iMsIpSc .eq. 2) then
+              call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+            else
+              call tempitrBC (y,ac, iBC, BC, iper, ilwork, umesh)
+            endif
 c----------------> END HARDCODE <--------------------
 c
             isclr = zero
@@ -600,14 +602,16 @@ c'
 c
                   else if(isolve.eq.10) then ! this is a mesh-elastic solve
 c
-                      lhs = 1  
-                      iprec=lhs
-                      ndofelas = nshl * nelas
-c 
-c                     call bc3elas_if (BC(:,ndof+2:ndof+4),    iBC,  
-c     &                                umesh, lcblkif,  nshg,  ndofBC,
-c     &                                nsd,   nelblif,  MAXBLK )
-c 
+                     lhs = 1  
+                     iprec=lhs
+                     ndofelas = nshl * nelas
+c
+                     if ( iMsIpSc .eq. 2 ) then 
+                       call bc3elas_if (BC(:,ndof+2:ndof+4),    iBC,  
+     &                                  umesh, lcblkif,  nshg,  ndofBC,
+     &                                  nsd,   nelblif,  MAXBLK )
+                     endif
+c
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
      &                              iper,   ilwork         )
@@ -632,10 +636,11 @@ c
                      call itrCorrect ( y, ac, yold, acold, solinc)
 c
 c...-------------> HARDCODED <-----------------------
-c
-c            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
-      call tempitrBC (y,ac, iBC, BC, iper, ilwork, x, umesh)
-c
+            if (iMsIpSc .eq. 2) then
+              call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+            else
+              call tempitrBC (y,ac, iBC, BC, iper, ilwork, umesh)
+            endif
 c----------------> END HARDCODE <--------------------
 c
                      call tnanq(y, 5, 'y_updbc')
@@ -706,10 +711,11 @@ c
             endif          
             call itrUpdate( yold,  acold,   y,    ac)
 c...-------------> HARDCODED <-----------------------
-c
-c            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
-      call tempitrBC (y,ac, iBC, BC, iper, ilwork, x, umesh)
-c
+            if (iMsIpSc .eq. 2) then
+              call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+            else 
+              call tempitrBC (y,ac, iBC, BC, iper, ilwork, umesh)
+            endif
 c----------------> END HARDCODE <--------------------
 c
 c Elaine-SPEBC      

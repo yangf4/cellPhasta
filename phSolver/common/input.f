@@ -55,13 +55,16 @@ c
         if (myrank == master) then
           write (iecho,1100) ititle, numpe,  numnp,  numel,  numelb, numelif,
      &                               nen,    nfaces, nsd,    numflx
-          write (iecho,1200)         iALE,   icoord, navier, irs,
+          write (iecho,1200)         iALE,   iMsIpSc,icoord, navier, irs,
      &                               iexec,  necho
 c
 c.... check the input parameters
 c
           if (iALE .lt. 0 .or. iALE .gt. 2)
      &                     call error ('input   ','iALE    ',iALE)
+c
+          if (iMsIpSc .lt. 0 .or. iMsIpSc .gt. 2)
+     &                     call error ('input   ','iMsIpSc    ',iMsIpSc)
 c
           if (icoord .lt. 0 .or. icoord .gt. 1)
      &                     call error ('input   ','icoord  ',icoord)
@@ -223,7 +226,7 @@ c
         write (23,*)  flxID(10,20), Force(3),HFlux, nsrflist(0:20)
         write (23,*) " numnp,  numel,  numelb, numelif, numpbc, nen,    nfaces,"
         write (23,*)  numnp,  numel,  numelb, numelif, numpbc, nen,    nfaces,
-     &                  numflx, ndof,   iALE,   icoord, navier,
+     &                  numflx, ndof,   iALE,   iMsIpSc,icoord, navier,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
      &                  iLSet
