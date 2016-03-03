@@ -219,6 +219,7 @@ c.... call the semi-discrete predictor multi-corrector iterative driver
 c
         call itrdrv (y,              ac,             
      &               uold,           point2x,
+     &               umesh,          xn,           
      &               iBC,            BC,
      &               point2iper,     point2ilwork,   shp,
      &               shgl,           shpb,           shglb,
@@ -266,7 +267,7 @@ c          deallocate(point2ilwork)
         deallocate(point2ifath)
         deallocate(point2ilwork)
         deallocate(xn)
-        deallocate(xdotold)
+c        deallocate(xdotold)
         deallocate(umesh)
         deallocate(uold)
         deallocate(wnrm)

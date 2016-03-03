@@ -1,4 +1,5 @@
-              subroutine itrdrv (y,         ac,   uold, x,         
+              subroutine itrdrv (y,         ac,   uold, x, 
+     &                   umesh,     xn,       
      &                   iBC,       BC,         
      &                   iper,      ilwork,     shp,       
      &                   shgl,      shpb,       shglb,
@@ -47,6 +48,7 @@ c      use mesh_motion_m
 c
         dimension y(nshg,ndof),            ac(nshg,ndof),  
      &            yold(nshg,ndof),         acold(nshg,ndof),           
+     &            xn(numnp,nsd),           xdot(numnp,nsd),
      &            x(numnp,nsd),            iBC(nshg),
      &            BC(nshg,ndofBC),         ilwork(nlwork),
      &            iper(nshg),              uold(nshg,nsd)
@@ -194,10 +196,11 @@ c
 
 c
 c ... allocate mesh-elastic solve related arrays only if mesh-elastic solve flag/option is ON
-c
-        if (iALE .gt. 0) then 
+c.... we may not need this anymore, since we have them in readnblk. 
+        if ( iALE .gt. 0 ) then 
           meshq = one
-          umesh = zero
+          x     = xn
+c          umesh = zero
         endif
 c
 c..........................................
@@ -322,10 +325,8 @@ c============ Start the loop of time steps============================c
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 c
-c            call temp_mesh_motion(x,umesh,time,delt(1),istp,numnp,nsd)
-c
-
-         
+          call tempMeshMo( x, umesh, iBC, BC(:,ndof+2:ndof+5) )
+c        
         if(iramp.eq.1) 
      &        call BCprofileScale(vbc_prof,BC,yold)
 
@@ -392,7 +393,6 @@ c
 c.... -----------------------> predictor phase <-----------------------
 c
             call itrPredict(   yold,    acold,    y,   ac )
-            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
 c
 c...-------------> HARDCODED <-----------------------
 c
@@ -595,7 +595,7 @@ c
      &                    iper,          ilwork,
      &                    shp,           shgl,
      &                    shpb,          shglb, solinc(1,isclr+5))
-c    
+c'    
                   endif  ! endif usingPETSc for scalar
 c
                   else if(isolve.eq.10) then ! this is a mesh-elastic solve
@@ -831,6 +831,12 @@ c
                    call write_field(
      &                  myrank,'a'//char(0),'motion_coords'//char(0),13,
      &                  x,     'd'//char(0), numnp, nsd, lstep)
+                   call write_field(
+     &                  myrank,'a'//char(0),'mesh_vel'//char(0),  8,
+     &                  umesh, 'd'//char(0), numnp, nsd, lstep)
+c                   call write_field(
+c     &                  myrank,'a'//char(0),'xdot'//char(0), 4,
+c     &                  xdot,  'd'//char(0), numnp, nsd, lstep)
 c                   call write_field(
 c     &                       myrank,'a'//char(0),'meshQ'//char(0), 5, 
 c     &                       meshq, 'd'//char(0), numel, 1,   lstep)

@@ -549,10 +549,10 @@ c
       endif
 
 c read in ALE stuff
-c read in displacement      
+c read in coordinate at n time step      
       intfromfile=0
       call phio_readheader(fhandle, 
-     & c_char_'xn' //char(0), 
+     & c_char_'motion_coords' //char(0), 
      & c_loc(intfromfile), ithree, dataInt, iotype)
 c      call readheader(irstin,fname1,intfromfile,
 c     &     ithree,'integer', iotype)
@@ -570,7 +570,7 @@ c
 
          iacsiz=numnp*nsd2
          call phio_readdatablock(fhandle,
-     &    c_char_'xn' // char(0),
+     &    c_char_'motion_coords' // char(0),
      &    c_loc(xnread), iacsiz, dataDbl,iotype)
 c         call readdatablock(irstin,fname1,xnread,iacsiz,
 c     &                   'double',iotype)
@@ -585,45 +585,45 @@ c     &                   'double',iotype)
       endif
 c read in xdotold
 c      fname1='xdot?'
-      intfromfile=0
-      call phio_readheader(fhandle, 
-     & c_char_'xdot' //char(0), 
-     & c_loc(intfromfile), ithree, dataInt, iotype)
+c      intfromfile=0
+c      call phio_readheader(fhandle, 
+c     & c_char_'xdot' //char(0), 
+c     & c_loc(intfromfile), ithree, dataInt, iotype)
 c      call readheader(irstin,fname1,intfromfile,
 c     &     ithree,'integer', iotype)
-      allocate( xdotold(numnp,nsd) )
-      if(intfromfile(1).ne.0) then 
-         numnp2=intfromfile(1)
-         nsd2=intfromfile(2)
-         lstep=intfromfile(3)
-         
-         if (numnp2 .ne. numnp) 
-     &        call error ('restar  ', 'numnp   ', numnp)
+c      allocate( xdotold(numnp,nsd) )
+c      if(intfromfile(1).ne.0) then 
+c         numnp2=intfromfile(1)
+c         nsd2=intfromfile(2)
+c         lstep=intfromfile(3)
+c         
+c         if (numnp2 .ne. numnp) 
+c     &        call error ('restar  ', 'numnp   ', numnp)
 c     
-         allocate( xdotoldread(numnp,nsd2) )
-         xdotoldread=zero
-
-         iacsiz=numnp*nsd2
-
-         call phio_readdatablock(fhandle,
-     &    c_char_'xdot' // char(0),
-     &    c_loc(xdotoldread), iacsiz, dataDbl,iotype)
+c         allocate( xdotoldread(numnp,nsd2) )
+c         xdotoldread=zero
+c
+c         iacsiz=numnp*nsd2
+c
+c         call phio_readdatablock(fhandle,
+c     &    c_char_'xdot' // char(0),
+c     &    c_loc(xdotoldread), iacsiz, dataDbl,iotype)
 c         call readdatablock(irstin,fname1,xdotoldread,iacsiz,
 c     &                   'double',iotype)
 c         xdotold(:,1:nsd)=xdotoldread(:,1:nsd)
-         deallocate(xdotoldread)
-      else
-         if (myrank.eq.master) then
-            warning='Time derivative of mesh displacement is set to zero (SAFE)'
-            write(*,*) warning
-         endif
-         xdotold=zero
-      endif
+c         deallocate(xdotoldread)
+c      else
+c         if (myrank.eq.master) then
+c            warning='Time derivative of mesh disp is set to zero (SAFE)'
+c            write(*,*) warning
+c         endif
+c         xdotold=zero
+c      endif
 c read in umesh
 c      fname1='umesh?'
       intfromfile=0
       call phio_readheader(fhandle, 
-     & c_char_'umesh' //char(0), 
+     & c_char_'mesh_vel' //char(0), 
      & c_loc(intfromfile), ithree, dataInt, iotype)
 c      call readheader(irstin,fname1,intfromfile,
 c     &     ithree,'integer', iotype)
@@ -641,7 +641,7 @@ c
 
          iacsiz=numnp*nsd2
          call phio_readdatablock(fhandle,
-     &    c_char_'umesh' // char(0),
+     &    c_char_'mesh_vel' // char(0),
      &    c_loc(umeshread), iacsiz, dataDbl,iotype)
 c         call readdatablock(irstin,fname1,umeshread,iacsiz,
 c     &                   'double',iotype)
