@@ -322,7 +322,8 @@ c============ Start the loop of time steps============================c
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 c
-c            call temp_mesh_motion(x,umesh,time,delt(1),istp,numnp,nsd)
+c      umesh = zero
+c            call temp_mesh_motion(x,umesh,time,delt(1),istp,numnp,nsd,myrank)
 c
 
          
@@ -392,7 +393,6 @@ c
 c.... -----------------------> predictor phase <-----------------------
 c
             call itrPredict(   yold,    acold,    y,   ac )
-            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
 c
 c...-------------> HARDCODED <-----------------------
 c
@@ -500,7 +500,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       solinc,        rerr,          umesh)
                     endif
                       else if (mod(impl(1),100)/10 .eq. 2) then ! mfg solve
-c'     
+c     
 c.... preconditioned matrix-free GMRES solver
 c     
                         lhs=0

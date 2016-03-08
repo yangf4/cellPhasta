@@ -54,17 +54,6 @@ Write_Field(  int *pid,
               int* stepno);
 
 void
-Write_Field(  int *pid,
-              char* filemode,
-              char* fieldtag,
-              int* tagsize,
-              void* array,
-              char* arraytype,
-              int* nshg,
-              int* numvars,
-              int* stepno);
-
-void
 Write_PhAvg2( int* pid,
               char* filemode,
               char* fieldtag,
