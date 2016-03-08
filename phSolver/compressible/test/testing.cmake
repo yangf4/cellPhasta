@@ -1,18 +1,3 @@
-macro(c_parallel_test name procs dir exe)
-  set(tname compressible_${name})
-  add_test(
-    NAME ${tname}
-    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} ${procs} ${exe} ${ARGN}
-    WORKING_DIRECTORY ${dir} )
-  set_tests_properties(${tname} PROPERTIES LABELS "phsolver_compressible")
-endmacro(c_parallel_test)
-
-macro(c_serial_test name dir exe)
-  set(tname compressible_${name})
-  add_test( NAME ${tname} COMMAND ${exe} ${ARGN} WORKING_DIRECTORY ${dir})
-  set_tests_properties(${tname} PROPERTIES LABELS "phsolver_compressible")
-endmacro(c_serial_test)
-
 set(CDIR ${CASES}/compressible_dg_interface)
 c_serial_test(inpCfg_dg_interface ${CDIR} cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
 
