@@ -55,8 +55,8 @@ c
         if (myrank == master) then
           write (iecho,1100) ititle, numpe,  numnp,  numel,  numelb, numelif,
      &                               nen,    nfaces, nsd,    numflx
-          write (iecho,1200)         iALE,   iMsIpSc,icoord, navier, irs,
-     &                               iexec,  necho
+          write (iecho,1200)         iALE,   iMsIpSc,iMsCsNb,icoord,
+     &                               navier, irs,    iexec,  necho
 c
 c.... check the input parameters
 c

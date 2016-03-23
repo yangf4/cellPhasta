@@ -250,6 +250,7 @@ extern "C" {
     int ndof;
     int iALE;
     int iMsIpSc;
+    int iMsCsNb;
     int icoord;
     int navier;
     int irs;

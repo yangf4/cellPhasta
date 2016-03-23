@@ -245,6 +245,8 @@ int input_fform(phSolver::Input& inp)
       cout << endl;
       exit(1);
     }
+
+    conpar.iMsCsNb = inp.GetValue("Mesh Hardcoded Case Number");
  
     if ((string)inp.GetValue("Turbulence Model") == "No-Model" ) {
       turbvari.irans = 0;

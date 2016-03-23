@@ -31,6 +31,10 @@
 #include <strings.h>
 #endif
 
+//#ifndef debug
+//#define debug
+//#endif
+
 void igetMinMaxAvg(int *ivalue, double *stats, int *statRanks) {
   double *value = (double*)malloc(sizeof(double));
   *value = 1.0*(*ivalue);
@@ -277,16 +281,16 @@ Write_Restart(  int* pid,
       streamio_setup_write(&f_descriptor, streamio_get_r());
     else if(outpar.output_mode == 0 )
       posixio_setup(&f_descriptor, 'w');
-//... DEBUGGING
-//    if(outpar.output_mode == -1 ) {
-//      streamio_setup_write(&f_descriptor, streamio_get_r());
-//      posixio_setup(&f_descriptor, 'w');
-//    }
-//... END DEBUGGING
     else if(outpar.output_mode > 0 )
       syncio_setup_write(nfiles, nfields, numparts/nfiles, &f_descriptor);
     else
       exit(EXIT_FAILURE);
+#ifdef debug
+    if(outpar.output_mode == -1 ) {
+      streamio_setup_write(&f_descriptor, streamio_get_r());
+      posixio_setup(&f_descriptor, 'w');
+    }
+#endif
     phio_constructName(f_descriptor,"restart",filename);
     phstr_appendInt(filename, *stepno);
     phstr_appendStr(filename, ".");

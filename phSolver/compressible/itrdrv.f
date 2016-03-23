@@ -827,25 +827,48 @@ c.. writing ybar field if requested in each restart file
 !    &              shglb,         nodflx,    ilwork)
                   
                call timer ('Output  ')      !set up the timer
-
+c... DEBUGGING       
+               if (output_mode .eq. -1) then 
+                 output_mode = 0 
+c... write solution and fields
+               call restar ('out ',  yold, acold)  
+               if (iALE .gt. 0) then 
+                 call write_field(
+     &                myrank,'a'//char(0),'motion_coords'//char(0),13,
+     &                x,     'd'//char(0), numnp, nsd, lstep)
+                 call write_field(
+     &                myrank,'a'//char(0),'mesh_vel'//char(0),  8,
+     &                umesh, 'd'//char(0), numnp, nsd, lstep)
+c                 call write_field(
+c     &                myrank,'a'//char(0),'xdot'//char(0), 4,
+c     &                xdot,  'd'//char(0), numnp, nsd, lstep)
+c                 call write_field(
+c     &                myrank,'a'//char(0),'meshQ'//char(0), 5, 
+c     &                meshq, 'd'//char(0), numel, 1,   lstep)
+               endif
+c... end writing
+                 output_mode = -1
+               endif
+c... END DEBUGGING
+ 
                !write the solution and time derivative 
                call restar ('out ',  yold, acold)  
 c
 c.... print out the updated mesh and mesh quality for mesh-elastic solve
 c
                if (iALE .gt. 0) then 
-                   call write_field(
-     &                  myrank,'a'//char(0),'motion_coords'//char(0),13,
-     &                  x,     'd'//char(0), numnp, nsd, lstep)
-                   call write_field(
-     &                  myrank,'a'//char(0),'mesh_vel'//char(0),  8,
-     &                  umesh, 'd'//char(0), numnp, nsd, lstep)
-c                   call write_field(
-c     &                  myrank,'a'//char(0),'xdot'//char(0), 4,
-c     &                  xdot,  'd'//char(0), numnp, nsd, lstep)
-c                   call write_field(
-c     &                       myrank,'a'//char(0),'meshQ'//char(0), 5, 
-c     &                       meshq, 'd'//char(0), numel, 1,   lstep)
+                 call write_field(
+     &                myrank,'a'//char(0),'motion_coords'//char(0),13,
+     &                x,     'd'//char(0), numnp, nsd, lstep)
+                 call write_field(
+     &                myrank,'a'//char(0),'mesh_vel'//char(0),  8,
+     &                umesh, 'd'//char(0), numnp, nsd, lstep)
+c                 call write_field(
+c     &                myrank,'a'//char(0),'xdot'//char(0), 4,
+c     &                xdot,  'd'//char(0), numnp, nsd, lstep)
+c                 call write_field(
+c     &                myrank,'a'//char(0),'meshQ'//char(0), 5, 
+c     &                meshq, 'd'//char(0), numel, 1,   lstep)
                endif
  
                !Write the distance to wall field in each restart

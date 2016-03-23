@@ -80,6 +80,14 @@ c
            if(ndof.gt.4) acold(:,5:ndof)   = ac(:,5:ndof)
 c
            iqoldsiz=nshg*ndof
+c... DEBUGGING
+c           if (output_mode .eq. -1) then
+c             output_mode = 0 
+c             call write_restart(myrank, lstep, nshg, ndof, 
+c     &            qold, acold)
+c             output_mode = -1 
+c           endif 
+c... END DEBUGGING
            call write_restart(myrank, lstep, nshg, ndof, 
      &          qold, acold)
 c           write (irstou) qold
