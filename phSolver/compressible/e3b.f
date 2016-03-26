@@ -170,7 +170,7 @@ c.... use one-point quadrature in time
 c
           where (.not.btest(iBCB(:,1),1)) p = pres
 c
-c.... prepare ALE parameter u_i * n_i
+c.... prepare ALE term u^m_i * n_i
 c
           umn= bnorm(:,1) * um1 + bnorm(:,2) * um2 + bnorm(:,3) * um3
 c
