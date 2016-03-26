@@ -41,7 +41,7 @@ c
 
         call localy(y,      ycl,     ienb,   ndofl,  'gather  ')
         call localx(x,      xlb,    ienb,   nsd,    'gather  ')
-        call local (umesh,  uml,    ien,    nsd,    'gather  ')
+        call local (umesh,  uml,    ienb,   nsd,    'gather  ')
 c
 
         !get the boundary element residuals
