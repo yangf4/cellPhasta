@@ -831,21 +831,21 @@ c... DEBUGGING
                if (output_mode .eq. -1) then 
                  output_mode = 0 
 c... write solution and fields
-               call restar ('out ',  yold, acold)  
-               if (iALE .gt. 0) then 
-                 call write_field(
-     &                myrank,'a'//char(0),'motion_coords'//char(0),13,
-     &                x,     'd'//char(0), numnp, nsd, lstep)
-                 call write_field(
-     &                myrank,'a'//char(0),'mesh_vel'//char(0),  8,
-     &                umesh, 'd'//char(0), numnp, nsd, lstep)
-c                 call write_field(
-c     &                myrank,'a'//char(0),'xdot'//char(0), 4,
-c     &                xdot,  'd'//char(0), numnp, nsd, lstep)
-c                 call write_field(
-c     &                myrank,'a'//char(0),'meshQ'//char(0), 5, 
-c     &                meshq, 'd'//char(0), numel, 1,   lstep)
-               endif
+                 call restar ('out ',  yold, acold)  
+                 if (iALE .gt. 0) then 
+                   call write_field(
+     &                  myrank,'a'//char(0),'motion_coords'//char(0),13,
+     &                  x,     'd'//char(0), numnp, nsd, lstep)
+                   call write_field(
+     &                  myrank,'a'//char(0),'mesh_vel'//char(0),  8,
+     &                  umesh, 'd'//char(0), numnp, nsd, lstep)
+c                   call write_field(
+c     &                  myrank,'a'//char(0),'xdot'//char(0), 4,
+c     &                  xdot,  'd'//char(0), numnp, nsd, lstep)
+c                   call write_field(
+c     &                  myrank,'a'//char(0),'meshQ'//char(0), 5, 
+c     &                  meshq, 'd'//char(0), numel, 1,   lstep)
+                 endif
 c... end writing
                  output_mode = -1
                endif

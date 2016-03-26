@@ -47,10 +47,10 @@ c
         rml = zero
 c
 !  pass the memory location of ycl to both yl and ycl in e3b.  This may
- !  seem dangerous since yl in e3b is :,nflow and ycl is :,ndof but they
- !  do not write to yl (out of bounds at least), only use the data there 
- !  so both will access data
- !  properly from this location.
+!  seem dangerous since yl in e3b is :,nflow and ycl is :,ndof but they
+!  do not write to yl (out of bounds at least), only use the data there 
+!  so both will access data
+!  properly from this location.
 c
         call e3b  (ycl,     ycl,     iBCB,    BCB,     shpb,    shglb,
      &             xlb,     rl,      rml,     sgn,     EGmass,  materb)
