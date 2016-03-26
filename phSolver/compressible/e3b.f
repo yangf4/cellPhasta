@@ -1,5 +1,6 @@
        subroutine e3b (yl,      ycl,  iBCB,    BCB,     shpb,    shglb,
-     &                 xlb,     rl,   rml,     sgn,     EGmass,  materb)
+     &                 xlb,     rl,   rml,     sgn,     EGmass,  materb,
+     &                 uml)
 c
 c----------------------------------------------------------------------
 c
@@ -87,6 +88,10 @@ c
      &            tau2n(npro),                 tau3n(npro),
      &            heat(npro)
 c
+        dimension uml(npro,nshl,nsd),          umn(npro),
+     &            um1(npro),                   um2(npro),  
+     &            um3(npro)
+c
         dimension lnode(27),               sgn(npro,nshl),
      &            shape(npro,nshl),        shdrv(npro,nsd,nshl)
 c
@@ -131,10 +136,12 @@ c
      &               g2yi,            g3yi,         WdetJb,
      &               bnorm,           pres,         T,
      &               u1,              u2,           u3,
+     &               um1,             um2,          um3,
      &               rho,             ei,           cp,
      &               rk,              rou,          p,
      &               Fv2,             Fv3,          Fv4,
-     &               Fh5,             dNadx,        materb)
+     &               Fh5,             dNadx,        materb,
+     &               uml)
 c
 c.... ires = 1 or 3
 c
@@ -163,13 +170,17 @@ c.... use one-point quadrature in time
 c
           where (.not.btest(iBCB(:,1),1)) p = pres
 c
+c.... prepare ALE parameter u_i * n_i
+c
+          umn= bnorm(:,1) * um1 + bnorm(:,2) * um2 + bnorm(:,3) * um3
+c
 c.... add the Euler contribution
 c
-          F1 = rou
-          F2 = rou * u1        + bnorm(:,1) * p
-          F3 = rou * u2        + bnorm(:,2) * p
-          F4 = rou * u3        + bnorm(:,3) * p
-          F5 = rou * (ei + rk) +         un * p
+          F1 =  rou - rho * umn
+          F2 = (rou - rho * umn) * u1        + bnorm(:,1) * p
+          F3 = (rou - rho * umn) * u2        + bnorm(:,2) * p
+          F4 = (rou - rho * umn) * u3        + bnorm(:,3) * p
+          F5 = (rou - rho * umn) * (ei + rk) +         un * p
 c
 c.... flop count
 c

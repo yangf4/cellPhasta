@@ -171,7 +171,8 @@ c.... calculate the convective contribution (Galerkin)
 c
         ttim(14) = ttim(14) - secs(0.0)
         call e3conv (g1yi,            g2yi,            g3yi,
-     &               A0,              A1,              A2,              A3,
+     &               A0,          
+     &               A1,              A2,              A3,
      &               rho,             pres,            T,
      &               ei,              rk,              
      &               u1,              u2,              u3,              

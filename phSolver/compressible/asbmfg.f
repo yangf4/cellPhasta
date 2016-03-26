@@ -1,6 +1,6 @@
         subroutine AsBMFG (y,       x,       shpb,    shglb,
      &                     ienb,    materb,  iBCB,    BCB,
-     &                     res,     rmes,    EGmass)
+     &                     res,     rmes,    EGmass,  umesh)
 c
 c----------------------------------------------------------------------
 c
@@ -23,7 +23,9 @@ c
      &            rl(npro,nshl,nflow),
      &            rml(npro,nshl,nflow),
      &            EGmass(npro, nshl, nshl) 
-c        
+c       
+        dimension umesh(numnp, nsd),     uml(npro,nshl,nsd)
+c 
         dimension sgn(npro,nshl)
         integer, intent(in) :: materb
 c
@@ -39,6 +41,7 @@ c
 
         call localy(y,      ycl,     ienb,   ndofl,  'gather  ')
         call localx(x,      xlb,    ienb,   nsd,    'gather  ')
+        call local (umesh,  uml,    ien,    nsd,    'gather  ')
 c
 
         !get the boundary element residuals
@@ -53,7 +56,8 @@ c
 !  properly from this location.
 c
         call e3b  (ycl,     ycl,     iBCB,    BCB,     shpb,    shglb,
-     &             xlb,     rl,      rml,     sgn,     EGmass,  materb)
+     &             xlb,     rl,      rml,     sgn,     EGmass,  materb,
+     &             uml)
 
         !assemble the residual and the modified residual
         call local(res,    rl,     ienb,   nflow,  'scatter ')

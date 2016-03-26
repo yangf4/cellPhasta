@@ -582,7 +582,7 @@ c
      &                 mienb(iblk)%p,           mattyp,
      &                 miBCB(iblk)%p,           mBCB(iblk)%p,
      &                 res,                     rmes, 
-     &                 EGmass)
+     &                 EGmass,                  umesh)
           if(lhs == 1 .and. iLHScond > 0) then
             call fillSparseC_BC(mienb(iblk)%p, EGmass, 
      &                   lhsk, row, col)

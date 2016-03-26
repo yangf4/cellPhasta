@@ -1,10 +1,11 @@
         subroutine e3bvar (yl,      ycl,     BCB,     shpb,    shglb,   
      &                     xlb,     lnode,   g1yi,    g2yi,
      &                     g3yi,    WdetJb,  bnorm,   pres,    T,
-     &                     u1,      u2,      u3,      rho,     ei,
-     &                     cp,      rk,      
+     &                     u1,      u2,      u3,      
+     &                     um1,     um2,     um3,    
+     &                     rho,     ei,      cp,      rk,      
      &                     rou,     p,       tau1n,   tau2n,   tau3n,
-     &                     heat,    dNadx,   materb)
+     &                     heat,    dNadx,   materb,  uml)
 c
 c----------------------------------------------------------------------
 c
@@ -79,6 +80,10 @@ c
      &            gamb(npro),              c(npro),
      &            tmp(npro),
      &            v1(npro,nsd),            v2(npro,nsd)
+c
+        dimension um1(npro),                 um2(npro),
+     &            um3(npro),                 uml(npro, nshl, nsd)
+c
         integer, intent(in) :: materb
         integer   aa
 c
@@ -90,6 +95,9 @@ c
         u1   = zero
         u2   = zero
         u3   = zero
+        um1  = zero
+        um2  = zero
+        um3  = zero
         T    = zero
 c
         do n = 1, nshlb
@@ -100,6 +108,12 @@ c
           u2   = u2   + shpb(:,nodlcl) * yl(:,nodlcl,3)
           u3   = u3   + shpb(:,nodlcl) * yl(:,nodlcl,4)
           T    = T    + shpb(:,nodlcl) * yl(:,nodlcl,5)
+c
+c.... Mesh velocity at integral point on boundary
+c
+          um1  = um1  + shpb(:,nodlcl) * uml(:,nodlcl,1)
+          um2  = um2  + shpb(:,nodlcl) * uml(:,nodlcl,2)
+          um3  = um3  + shpb(:,nodlcl) * uml(:,nodlcl,3)
         enddo
 c
 c.... calculate the specific kinetic energy
