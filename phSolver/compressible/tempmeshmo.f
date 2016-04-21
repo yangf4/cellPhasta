@@ -6,7 +6,7 @@ c-----------------------------------------------------------------
 c
       include "common.h"
 c
-      dimension x(numnp,nsd), disp(numnp,nsd),
+      real*8    x(numnp,nsd), disp(numnp,nsd),
      &          umesh(numnp,nsd)
       dimension iBC(nshg),    BC(nshg,4)
       integer   casenumbeir, offset, istp
@@ -15,17 +15,18 @@ c
 c
 c.... Update ALE mesh coordinates x
 c
-      if (iMsCsNb .eq. 0) then 
+      if ((iMsCsNb .le. 0) .or. (iMsCsNb .ge. 7)) then 
         write(*,*) "Change Mesh Input Source to GUI or Flow-driven"
       else
         casenumber = iMsCsNb
       endif
-      disp       = 0.0d0
-      dyn_org    = lstep * 0.04
+      disp       = zero
 c
 c.... test case 1
+c.... original mov+rot+shrk
 c
       if (casenumber .eq. 1) then
+        dyn_org    = lstep * 0.04
         do i = 1,numnp
           if ( (ibits(iBC(i),14,3) .eq. 7) .and.
      &         (x(i,1) .lt. 23.9) .and. (x(i,1) .gt. -15.9) .and. 
@@ -121,12 +122,9 @@ c     &                    + (x(i,1)) *  sin(pi/600)
               endif ! end middle--switch head middle tail
 
             endif ! end if switch top middle bottom
-            disp(i,1) = disp(i,1) * Delt(1)
-            disp(i,2) = disp(i,2) * Delt(1)
-            disp(i,3) = disp(i,3) * Delt(1)
-            BC(i,1)   = disp(i,1) / Delt(1)
-            BC(i,2)   = disp(i,2) / Delt(1)
-            BC(i,3)   = disp(i,3) / Delt(1)
+            BC(i,1)   = disp(i,1) !/ Delt(1)
+            BC(i,2)   = disp(i,2) !/ Delt(1)
+            BC(i,3)   = disp(i,3) !/ Delt(1)
             umesh(i,1)= BC(i,1)
             umesh(i,2)= BC(i,2)
             umesh(i,3)= BC(i,3)
@@ -138,6 +136,7 @@ c.... end test case 1
 c
 c
 c.... test case 2
+c.... ellipical rotation
 c
       if (casenumber .eq. 2) then
         do i = 1,numnp
@@ -155,16 +154,17 @@ c
             umesh(i,1)= BC(i,1)
             umesh(i,2)= BC(i,2)
             umesh(i,3)= BC(i,3)
-          endif ! end if inside cylinder
+          endif ! end if inside box
         enddo ! end loop numnp
       endif ! end if case 1
 c
-c.... end test case 1
+c.... end test case 2
 c
 c
 c.... test case 3
 c
       if (casenumber .eq. 3) then
+        dyn_org    = lstep * 0.04
         do i = 1,numnp
           if ( (ibits(iBC(i),14,3) .eq. 7) .and.
      &         (x(i,1) .lt. 23.9) .and. (x(i,1) .gt. -15.9) .and. 
@@ -294,6 +294,7 @@ c
 c.... test case 4
 c
       if (casenumber .eq. 4) then
+        dyn_org    = lstep * 0.04
         do i = 1,numnp
           if ( (ibits(iBC(i),14,3) .eq. 7) .and.
      &         (x(i,1) .lt. 23.9) .and. (x(i,1) .gt. -15.9) .and. 
@@ -422,7 +423,186 @@ c     &                    + (x(i,1)) *  sin(pi/600)
 c
 c.... end test case 4
 c
+c
+c.... test case 5
+c.... delay 200 steps then go x direction
+c
+      if (casenumber .eq. 5) then
+        do i = 1,numnp
+          if ( (ibits(iBC(i),14,3) .eq. 7) .and. 
+     &        ((x(i,1)) .gt. -119e-6) .and. ((x(i,1)) .lt. 279e-6) .and.
+     &        (abs(x(i,2)) .lt. 12e-6) .and.
+     &        (abs(x(i,3)) .lt. 12e-6) ) then
+            if ( lstep .gt. 200 ) then
+              disp(i,1) = 1.0e-6
+              BC(i,1)   = disp(i,1) / Delt(1)
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+              umesh(i,1)= BC(i,1)
+              umesh(i,2)= BC(i,2)
+              umesh(i,3)= BC(i,3)
+            else 
+              BC(i,1)   = zero
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+              umesh(i,1)= BC(i,1)
+              umesh(i,2)= BC(i,2)
+              umesh(i,3)= BC(i,3)
+            endif ! end if larger than ramping time
+          endif ! end if inside channel
+        enddo ! end loop numnp
+      endif ! end if case 1
+c
+c.... end test case 5
+c
+c.... test case 6
+c.... ARO test case size mov+rot+shrk
+c
+      if (casenumber .eq. 6) then
+        dyn_org    = lstep * 2e-5 
+        do i = 1,numnp
+          if ( (ibits(iBC(i),14,3) .eq. 7) .and.
+     &         (x(i,1) .lt. 32.9e-3) .and. (x(i,1) .gt. 1e-4) .and. 
+     &         ((x(i,2)*x(i,2) + x(i,3)*x(i,3)) .lt. 64e-6) ) then
+            if( x(i,2) .ge. 1e-3 ) then ! top
+              if ( x(i,1) .le. (dyn_org+9e-3) ) then ! top tail
+                disp(i,1) = -0.005 * (x(i,1)-6.0e-3) + 2e-5
+     &                    + (x(i,1)-6.0e-3) * (cos(pi/600) - 1.0)
+     &                    - (x(i,2)-2.4e-3) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)-2.4e-3) + 1e-5
+     &                    + (x(i,2)-2.4e-3) * (cos(pi/600) - 1.0)
+     &                    + (x(i,1)-6.0e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
 
+              else if ( x(i,1) .ge. (dyn_org+13e-3) ) then ! top head
+                disp(i,1) = -0.005 * (x(i,1)-14.8e-3) + 2e-5
+     &                    + (x(i,1)-14.8e-3) * (cos(pi/600) - 1.0)
+     &                    - (x(i,2)-2.4e-3) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)-2.4e-3) + 1e-5
+     &                    + (x(i,2)-2.4e-3) * (cos(pi/600) - 1.0)
+     &                    + (x(i,1)-14.8e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              else ! top middle
+                disp(i,1) = -0.005 * (x(i,1)-9.4e-3) + 2e-5
+     &                    + (x(i,1)-9.4e-3) * (cos(pi/600) - 1.0)
+     &                    - (x(i,2)-2.4e-3) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)-2.4e-3) + 1e-5
+     &                    + (x(i,2)-2.4e-3) * (cos(pi/600) - 1.0)
+     &                    + (x(i,1)-9.4e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              endif ! end top--switch head middle tail
+
+            else if( x(i,2) .le. -1e-3 ) then ! bottom
+              if ( x(i,1) .le. (dyn_org+9e-3) ) then ! bottom tail 
+                disp(i,1) = -0.005 * (x(i,1)-6.0e-3) + 2e-5
+     &                    - (x(i,1)-6.0e-3) * (cos(pi/600) - 1.0)
+     &                    + (x(i,2)+2.4e-3) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)+2.4e-3) - 1e-5
+     &                    - (x(i,2)+2.4e-3) * (cos(pi/600) - 1.0)
+     &                    - (x(i,1)-6.0e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              else if ( x(i,1) .ge. (dyn_org+13e-3) ) then ! bottom head
+                disp(i,1) = -0.005 * (x(i,1)-14.8e-3) + 2e-5
+     &                    - (x(i,1)-14.8e-3) * (cos(pi/600) - 1.0)
+     &                    + (x(i,2)+2.4e-3) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)+2.4e-3) - 1e-5
+     &                    - (x(i,2)+2.4e-3) * (cos(pi/600) - 1.0)
+     &                    - (x(i,1)-14.8e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              else ! bottom middle
+                disp(i,1) = -0.005 * (x(i,1)-9.4e-3) + 2e-5
+     &                    - (x(i,1)-9.4e-3) * (cos(pi/600) - 1.0)
+     &                    + (x(i,2)+2.4e-3) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)+2.4e-3) - 1e-5
+     &                    - (x(i,2)+2.4e-3) * (cos(pi/600) - 1.0)
+     &                    - (x(i,1)-9.4e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              endif ! end bottom--switch head middle tail
+
+            else ! middle
+              if ( x(i,1) .le. (dyn_org+9e-3) ) then ! middle tail
+                disp(i,1) = -0.005 * (x(i,1)-6.0e-3) + 2e-5
+c     &                    + (x(i,1)-6.0e-3) * (cos(pi/600) - 1.0)
+c     &                    - (x(i,2)) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)) ! + 1e-5
+c     &                    + (x(i,2)) * (cos(pi/600) - 1.0)
+c     &                    + (x(i,1)-6.0e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              else if ( x(i,1) .ge. (dyn_org+13e-3) ) then ! middle head
+                disp(i,1) = -0.005 * (x(i,1)-14.8e-3) + 2e-5
+c     &                    + (x(i,1)-14.8e-3) * (cos(pi/600) - 1.0)
+c     &                    - (x(i,2)) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)) ! + 1e-5
+c     &                    + (x(i,2)) * (cos(pi/600) - 1.0)
+c     &                    + (x(i,1)-14.8e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              else ! middle middle
+                disp(i,1) = -0.005 * (x(i,1)-9.4e-3) + 2e-5
+c     &                    + (x(i,1)-9.4e-3) * (cos(pi/600) - 1.0)
+c     &                    - (x(i,2)) *  sin(pi/600)
+                disp(i,2) = -0.005 * (x(i,2)) ! + 1e-5
+c     &                    + (x(i,2)) * (cos(pi/600) - 1.0)
+c     &                    + (x(i,1)-9.4e-3) *  sin(pi/600)
+                disp(i,3) = -0.005 * x(i,3)
+ 
+              endif ! end middle--switch head middle tail
+
+            endif ! end if switch top middle bottom
+            BC(i,1)   = disp(i,1) !/ Delt(1)
+            BC(i,2)   = disp(i,2) !/ Delt(1)
+            BC(i,3)   = disp(i,3) !/ Delt(1)
+            umesh(i,1)= BC(i,1)
+            umesh(i,2)= BC(i,2)
+            umesh(i,3)= BC(i,3)
+          endif ! end if inside cylinder
+        enddo ! end loop numnp
+      endif ! end if case 6
+c
+c.... end test case 6
+c
+c
+c.... test case 7
+c.... delay 200 steps then go x direction
+c.... mimic the real experiment. 
+c
+      if (casenumber .eq. 7) then
+        do i = 1,numnp
+          if ( (ibits(iBC(i),14,3) .eq. 7) .and. 
+     &        ((x(i,1)) .gt. -119e-6) .and. ((x(i,1)) .lt. 279e-6) .and.
+     &        (abs(x(i,2)) .lt. 12e-6) .and.
+     &        (abs(x(i,3)) .lt. 12e-6) ) then
+            if ( (lstep .gt. 200) .and. (lstep .le. 450) ) then
+              BC(i,1)   = 2.0
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+            else if ( lstep .gt. 450 ) then             
+              disp(i,1) = -0.02 * (x(i,1) - (lstep-200)*2.0*Delt(1)) 
+              disp(i,2) =  0.01 *  x(i,2) 
+              disp(i,3) =  0.01 *  x(i,3)
+              BC(i,1)   = disp(i,1) / Delt(1) + 2.0
+              BC(i,2)   = disp(i,2) / Delt(1)
+              BC(i,3)   = disp(i,3) / Delt(1)
+            else 
+              BC(i,1)   = zero
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+            endif ! end if larger than ramping time
+            umesh(i,1)= BC(i,1)
+            umesh(i,2)= BC(i,2)
+            umesh(i,3)= BC(i,3)
+          endif ! end if inside channel
+        enddo ! end loop numnp
+      endif ! end if case 1
+c
+c.... end test case 7
+c
       return
       end
-
+c
