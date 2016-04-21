@@ -121,13 +121,11 @@ c               y(i,1:3) =umesh(i,1:3)
 c             endif
 c          enddo
 c
-c------> HARDCODED BC <---------
           where (ibits(iBC,3,3) .eq. 7)
-            y(:,1) =  BC(:,3) + umesh(:,1)
-            y(:,2) =  BC(:,4) + umesh(:,2)
-            y(:,3) =  BC(:,5) + umesh(:,3)
+            y(:,1) =  BC(:,3)
+            y(:,2) =  BC(:,4)
+            y(:,3) =  BC(:,5)
           endwhere
-c-------> END HARDCODED <----------
 c
 c       endif
 c

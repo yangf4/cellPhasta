@@ -40,7 +40,9 @@ c
 c
               BC(inode0,:) = umesh(inode0,:)
               BC(inode1,:) = umesh(inode1,:)
-              
+
+      write(*,'(a,i4,6f12.4)') 'iel: ',iel,umesh(inode0,:),umesh(inode1,:)
+
               iBC(inode0) = ibclr(iBC(inode0), 14) 
               iBC(inode0) = ibclr(iBC(inode0), 15) 
               iBC(inode0) = ibclr(iBC(inode0), 16) 

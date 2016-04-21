@@ -60,6 +60,7 @@ c
               write (fname2,"('connectivity interior linear tetrahedron')") 
 !              write (fname2,"('connectivity interior?')") 
             endif
+      write(*,*) '[',myrank,'] intfromfile: ',intfromfile
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
             call phio_readheader(fhandle, fname2 // char(0),

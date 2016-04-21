@@ -690,12 +690,16 @@ c
 c
         enddo if_blocks
 c
+c      numifnodes = 0
+c
         do inode = 1,nshg
 c
 c ... NOT SURE IF THIS IS THE BEST IF :
 c
           if (sum_vi_area(inode,nsd+1) > zero) then
             umesh(inode,:) = sum_vi_area(inode,:) / sum_vi_area(inode,nsd+1)
+c      numifnodes = numifnodes + 1
+c      write(*,'(a,i2,a,2i4,6f12.4)') '[',myrank,'] inode, x, umesh:',numifnodes,inode,x(inode,:),umesh(inode,:)
           endif
 c
         enddo

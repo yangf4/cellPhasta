@@ -9,6 +9,7 @@ c
 c Zdenek Johan, Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
 c
+      use mpi_def_m
       use number_def_m
       use matdat_def_m
 
@@ -78,7 +79,6 @@ c from different modules
      &  numRCRSrfs, nsrflistRCR(0:MAXSURF),ircrfile,
      &  ideformwall, iwallmassfactor, iwallstiffactor, iviscflux 
         common /sequence/ seqsize, stepseq(100)
-	common /workfc/ master, numpe, myrank
 	common /fronts/ maxfront, nlwork
 	common /newdim/ nshgt, minowned,maxowned, numper, nshg0
 	common /timer4/ birth, death, comtim

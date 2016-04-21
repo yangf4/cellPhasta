@@ -44,6 +44,10 @@ c        integer, parameter :: idg = 290
      &,                      vint = -1.0d0
 #endif
 c
+#ifdef channel_case
+      real*8 :: x1,x2,l
+#endif
+c
       umesh = 0.0d0
 c
 #ifdef  no_ale
@@ -114,18 +118,24 @@ c
 #endif
 c
 #ifdef channel_case
+c
+      c1 = 0.025d0
+      c2 = 0.050d0
+      x1 = -0.05d0 + real(istp-100,8)*dt*c1
+      x2 = +0.05d0 + real(istp-100,8)*dt*c2
+c
       do i = 1,numnp
-        if (x(i,1) < 0.0d0) then
-          d = abs(x(i,1)/0.05d0+1.d0)
-          c1 = 0.025d0
-        else
-          d = abs(x(i,1)/0.05d0-1.d0)
-          c1 = 0.05d0
+        if (x(i,1) > 8.d0*x1 .and. x(i,1) <= x1) then
+          umesh(i,1) = c1*(x(i,1) - 8.d0*x1)/(-7.0d0*x1)
+        elseif (x(i,1) > x1 .and. x(i,1) <= 0.0d0) then
+          umesh(i,1) = c1*x(i,1)/x1
+        elseif (x(i,1) > 0.0d0 .and. x(i,1) <= x2) then
+          umesh(i,1) = c2*x(i,1)/x2
+        elseif (x(i,1) > x2 .and. x(i,1) <= 8.d0*x2) then
+          umesh(i,1) = c2*(1.0d0 - (x(i,1)-x2)/(7.0d0*x2))
         endif
-        if (d <= 1.0d0) then
-          umesh(i,1) = c1*c2*(1.0d0-d)
-        endif
-c      write(*,11) myrank,i,x(i,:),umesh(i,:)
+c      write(*,11)myrank,i,x(i,:),umesh(i,:)
+c      cycle
         x(i,1:nsd) = x(i,1:nsd) + umesh(i,1:nsd)*dt
       enddo
 #endif

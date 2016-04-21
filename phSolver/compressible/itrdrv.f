@@ -322,7 +322,7 @@ c============ Start the loop of time steps============================c
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 c
-c      umesh = zero
+      umesh = zero
 c            call temp_mesh_motion(x,umesh,time,delt(1),istp,numnp,nsd,myrank)
 c
 
@@ -678,6 +678,7 @@ c
                      call itrCorrectElas(disp, elasDy)
 c
                      umesh = disp / Delt(1)
+c 
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
      &                              iper,   ilwork        )
@@ -884,9 +885,6 @@ c         tcorewc2 = secs(0.0)
          endif
         
 c     call wtime
-
-      call destroyWallData
-      call destroyfncorp
 
  3000 continue !end of NTSEQ loop
 c     

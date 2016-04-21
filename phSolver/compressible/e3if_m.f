@@ -1,5 +1,6 @@
       module e3if_m
 c
+        use mpi_def_m
         use hierarchic_m
         use matdat_def_m
         use e3if_defs_m
@@ -23,6 +24,7 @@ c
           real*8, dimension(nqpt), intent(in) :: qwtif0, qwtif1
 c
           integer :: intp
+      integer :: iel
 c
 c      write(*,*) 'In e3if...'
 c
@@ -106,6 +108,9 @@ c
             else
               call error ('wrong mater: ', 'calc vi', 0)
             endif
+c      do iel = 1,npro
+c        write(*,'(a,i4,a,i4,3f12.4)') '[',myrank,'] iel: ',iel,vi(iel,:)
+c      enddo
 c
             call calc_vi_area_node(sum_vi_area_l0,shp0,nshl0)
             call calc_vi_area_node(sum_vi_area_l1,shp1,nshl1)

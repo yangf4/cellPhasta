@@ -63,7 +63,7 @@ c  put a barrier here so that all of the files are done reading
 c  This SHOULD shield any mpi_profile information from io bottlenecks
 c
         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-
+c
 c... updated, truly useful things for Duct.........
          if(isetInitial_Duct.gt.0)then
             call setInitial_Duct(x)    ! in INIprofile.f
@@ -277,7 +277,7 @@ c
         include "mpif.h"
         include "auxmpi.h"
 
-        dimension x(numnp,3)
+        dimension x(numnp,nsd)
 
         real*8   Forout(3), Forin(3)
 

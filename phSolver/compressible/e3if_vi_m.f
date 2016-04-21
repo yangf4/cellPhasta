@@ -18,7 +18,10 @@ c
         do isd = 1,nsd
 c
 c          vi(:,isd) = beta * p**alpha * n(:,isd)
-          vi(:,isd) = n(:,isd)
+c          vi(:,isd) = n(:,isd)
+      vi(:,1) = -1.0d0
+      vi(:,2) =  0.0d0
+      vi(:,3) =  0.0d0
 c
         enddo
 c
