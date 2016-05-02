@@ -10,18 +10,21 @@ c
 c
         integer :: ivisc, icon
 c
+c -----> BEGIN HARDCODE <-----------
 c HARDCODED until the proper indexing system is implemented
 c
-        select case (mater)
-        case (1)
+        select case (mat_eos(mater,1))
+        case (ieos_ideal_gas)
           ivisc = 3
           icon = 4
-        case (2)
+        case (ieos_liquid_1)
           ivisc = 7
           icon = 8
         case default
           call error ('getdiff ', 'ERROR: index can not be set!',0)
         end select
+c
+c------> END HARDCODE <-----------
 c
         if (matflg(2,mater) == 0) then ! Shear Law: Constant Viscosity
           rmu = mat_prop(mater,ivisc,1)
