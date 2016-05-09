@@ -114,13 +114,6 @@ c
 c
 c.... x1-velocity, x2-velocity and x3-velocity, 3D
 c       
-c.... ALE change takes place here
-c          do i = 1,nshg 
-c             if (ibits(iBC(i),3,3) .eq. 7) then
-c               y(i,1:3) =umesh(i,1:3)
-c             endif
-c          enddo
-c
           where (ibits(iBC,3,3) .eq. 7)
             y(:,1) =  BC(:,3)
             y(:,2) =  BC(:,4)

@@ -42,9 +42,9 @@ c
         real*8, dimension(:), pointer :: rk1, h1, cp1, alfaP1, betaT1
 c
           real*8, parameter :: s = 1.0d0
-     &,                        e = 1.0d-1
+     &,                        e = 1.0d0
      &,                        h = 1.d-2
-     &,                        mu = 1.d0
+     &,                        mu = 1.d-5
 c
 c
 c... properties
