@@ -554,8 +554,6 @@ c read in coordinate at n time step
       call phio_readheader(fhandle, 
      & c_char_'motion_coords' //char(0), 
      & c_loc(intfromfile), ithree, dataInt, iotype)
-c      call readheader(irstin,fname1,intfromfile,
-c     &     ithree,'integer', iotype)
       allocate( xn(numnp,nsd) )
       if(intfromfile(1).ne.0) then 
          numnp2=intfromfile(1)
@@ -572,8 +570,6 @@ c
          call phio_readdatablock(fhandle,
      &    c_char_'motion_coords' // char(0),
      &    c_loc(xnread), iacsiz, dataDbl,iotype)
-c         call readdatablock(irstin,fname1,xnread,iacsiz,
-c     &                   'double',iotype)
          xn(:,1:nsd)=xnread(:,1:nsd)
          deallocate(xnread)
       else
@@ -620,44 +616,39 @@ c         endif
 c         xdotold=zero
 c      endif
 c read in umesh
-c      fname1='umesh?'
+      fname1='umesh?'
       intfromfile=0
-      call phio_readheader(fhandle, 
+       call phio_readheader(fhandle, 
      & c_char_'mesh_vel' //char(0), 
      & c_loc(intfromfile), ithree, dataInt, iotype)
-c      call readheader(irstin,fname1,intfromfile,
-c     &     ithree,'integer', iotype)
-      allocate( umesh(numnp,nsd) )
-      if(intfromfile(1).ne.0) then 
-         numnp2=intfromfile(1)
-         nsd2=intfromfile(2)
-         lstep=intfromfile(3)
-         
-         if (numnp2 .ne. numnp) 
+       allocate( umesh(numnp,nsd) )
+       if(intfromfile(1).ne.0) then 
+          numnp2=intfromfile(1)
+          nsd2=intfromfile(2)
+          lstep=intfromfile(3)
+          
+          if (numnp2 .ne. numnp) 
      &        call error ('restar  ', 'numnp   ', numnp)
-c     
-         allocate( umeshread(numnp,nsd2) )
-         umeshread=zero
-
-         iacsiz=numnp*nsd2
-         call phio_readdatablock(fhandle,
+      
+          allocate( umeshread(numnp,nsd2) )
+          umeshread=zero
+ 
+          iacsiz=numnp*nsd2
+          call phio_readdatablock(fhandle,
      &    c_char_'mesh_vel' // char(0),
      &    c_loc(umeshread), iacsiz, dataDbl,iotype)
-c         call readdatablock(irstin,fname1,umeshread,iacsiz,
-c     &                   'double',iotype)
-         umesh(:,1:nsd)=umeshread(:,1:nsd)
-         deallocate(umeshread)
-      else
-         if (myrank.eq.master) then
-            warning='Mesh velocity is set to zero (SAFE)'
-            write(*,*) warning
-         endif
+          umesh(:,1:nsd)=umeshread(:,1:nsd)
+          deallocate(umeshread)
+       else
+          if (myrank.eq.master) then
+             warning='Mesh velocity is set to zero (SAFE)'
+             write(*,*) warning
+          endif
          umesh=zero
-      endif
+       endif
 c
 c.... end read ALE stuff
 c
-
 cc
 cc.... read the header and check it against the run data
 cc

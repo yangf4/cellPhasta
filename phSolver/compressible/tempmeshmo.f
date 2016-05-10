@@ -11,11 +11,12 @@ c
       dimension iBC(nshg),    BC(nshg,4)
       integer   casenumbeir, offset, istp
       real*8    dyn_org   ! dynamic origin
+      real*8    loc(444)
       real*8    norm 
 c
 c.... Update ALE mesh coordinates x
 c
-      if ((iMsCsNb .le. 0) .or. (iMsCsNb .ge. 7)) then 
+      if ( iMsCsNb .le. 0 ) then 
         write(*,*) "Change Mesh Input Source to GUI or Flow-driven"
       else
         casenumber = iMsCsNb
@@ -574,18 +575,23 @@ c.... mimic the real experiment.
 c
       if (casenumber .eq. 7) then
         do i = 1,numnp
+          dyn_org = (lstep-300) * 2.0 * Delt(1)
           if ( (ibits(iBC(i),14,3) .eq. 7) .and. 
      &        ((x(i,1)) .gt. -119e-6) .and. ((x(i,1)) .lt. 279e-6) .and.
      &        (abs(x(i,2)) .lt. 12e-6) .and.
      &        (abs(x(i,3)) .lt. 12e-6) ) then
-            if ( (lstep .gt. 200) .and. (lstep .le. 450) ) then
+            if ( (lstep .ge. 300) .and. (lstep .lt. 420) ) then
               BC(i,1)   = 2.0
               BC(i,2)   = zero
               BC(i,3)   = zero
-            else if ( lstep .gt. 450 ) then             
-              disp(i,1) = -0.02 * (x(i,1) - (lstep-200)*2.0*Delt(1)) 
-              disp(i,2) =  0.01 *  x(i,2) 
-              disp(i,3) =  0.01 *  x(i,3)
+            else if ( lstep .ge. 420 ) then
+              if ( (x(i,1) - dyn_org) .ge. 0.0 ) then            
+                disp(i,1) = -0.05 * (x(i,1) - dyn_org) 
+              else 
+                disp(i,1) = 0.0
+              endif
+              disp(i,2) =  0.01274 *  x(i,2) 
+              disp(i,3) =  0.01274 *  x(i,3)
               BC(i,1)   = disp(i,1) / Delt(1) + 2.0
               BC(i,2)   = disp(i,2) / Delt(1)
               BC(i,3)   = disp(i,3) / Delt(1)
@@ -602,6 +608,64 @@ c
       endif ! end if case 1
 c
 c.... end test case 7
+c
+c
+c.... test case 8
+c.... delay 200 steps then go x direction
+c.... mimic the real experiment. 
+c
+      if (casenumber .eq. 8) then
+        loc(1:300)= 0.0
+        loc(301)    = 1.1
+        loc(302:375) = 1.8
+        do i = 376,424
+          loc(i) = loc(i-1) + 0.0142857
+        enddo
+        loc(425)  = 2.5
+        do i = 426,444
+          loc(i) = loc(i-1) - 0.1052631
+        enddo
+        dyn_org = 0.0
+        do i = 300,lstep      
+          dyn_org = dyn_org + loc(i-1) * Delt(1)
+        enddo
+        do i = 1,numnp
+          if ( (ibits(iBC(i),14,3) .eq. 7) .and. 
+     &        ((x(i,1)) .gt. -119e-6) .and. ((x(i,1)) .lt. 279e-6) .and.
+     &        (abs(x(i,2)) .lt. 12e-6) .and.
+     &        (abs(x(i,3)) .lt. 12e-6) ) then
+            if ( (lstep .ge. 300) .and. (lstep .lt. 425) ) then
+              BC(i,1)   = loc(lstep)
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+            else if ( lstep .ge. 425 ) then
+              if ( x(i,1) .ge. dyn_org ) then            
+                disp(i,1) = -0.05 * (x(i,1) - dyn_org) 
+              else 
+                disp(i,1) = 0.0
+              endif
+              disp(i,2) =  0.01274 *  x(i,2)
+              if ( x(i,3) .ge. 0.0 ) then
+                disp(i,3) = 0.02548 * x(i,3)
+              else
+                disp(i,3) = 0.0
+              endif
+              BC(i,1)   = disp(i,1) / Delt(1) + loc(lstep)
+              BC(i,2)   = disp(i,2) / Delt(1)
+              BC(i,3)   = disp(i,3) / Delt(1)
+            else 
+              BC(i,1)   = zero
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+            endif ! end if larger than ramping time
+            umesh(i,1)= BC(i,1)
+            umesh(i,2)= BC(i,2)
+            umesh(i,3)= BC(i,3)
+          endif ! end if inside channel
+        enddo ! end loop numnp
+      endif ! end if case 8
+c
+c.... end test case 8
 c
       return
       end

@@ -18,7 +18,8 @@ c
         do isd = 1,nsd
 c
 c          vi(:,isd) = beta * p**alpha * n(:,isd)
-          vi(:,isd) = n(:,isd)
+c          vi(:,isd) = n(:,isd) !* 0.0005
+          vi(:,isd) = 0.0
 c
         enddo
 c
