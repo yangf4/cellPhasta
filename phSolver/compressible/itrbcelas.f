@@ -104,7 +104,6 @@ c
       enddo
 c
         if (numpe > 1) then
-           call commu (umesh, ilwork, nelas, 'out')
            call commu (disp, ilwork, nelas, 'out')
         endif
 c
