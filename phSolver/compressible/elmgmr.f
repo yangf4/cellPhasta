@@ -713,7 +713,10 @@ c
 !     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
 !      enddo
 c
-      numifnodes = 0
+        if (numpe > 1) then
+          call commu (sum_vi_area, ilwork, nsd+1, 'in ')
+        endif
+        call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c
         do inode = 1,nshg
 c
@@ -721,10 +724,7 @@ c ... NOT SURE IF THIS IS THE BEST IF :
 c
           if (sum_vi_area(inode,nsd+1) > zero) then
             umesh(inode,:) = sum_vi_area(inode,:) / sum_vi_area(inode,nsd+1)
-      numifnodes = numifnodes + 1
-c      write(*,'(a,i2,a,2i6,6f12.4)') '[',myrank,'] inode, x, umesh:',numifnodes,inode,x(inode,:),umesh(inode,:)
           endif
-c
         enddo
 c 
         deallocate(sum_vi_area)
