@@ -120,7 +120,6 @@ c------> HARDCODED BC <---------
             y(:,2) =  BC(:,4) + umesh(:,2)
             y(:,3) =  BC(:,5) + umesh(:,3)
           endwhere
-c-------> END HARDCODED <----------
 c
 c       endif
 c

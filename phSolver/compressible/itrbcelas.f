@@ -93,9 +93,31 @@ c.... end of velocity
 c
 c.... communications
 c 
+c
+c------> BEGIN DEBUG <-----------
+c
+      do i = 1,nshg
+        if (myrank == 0 .and. i == 59
+     & .or. myrank == 1 .and. (i == 6 .or. i == 58)
+     &)
+     &   write(*,999) '[',myrank,'] :',i,disp(i,:), umesh(i,:)
+      enddo
+c
         if (numpe > 1) then
            call commu (disp, ilwork, nelas, 'out')
         endif
+c
+c------> BEGIN DEBUG <-----------
+c
+      do i = 1,nshg
+        if (myrank == 0 .and. i == 59
+     & .or. myrank == 1 .and. (i == 6 .or. i == 58)
+     &)
+     &   write(*,999) '[',myrank,'] :',i,disp(i,:), umesh(i,:)
+      enddo
+c
+999   format(a,i2,a,i6,6e24.16)
+c------> END DEBUG <-----------
 c
 c       slave has masters value, for abc we need to rotate it
 c

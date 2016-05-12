@@ -1,5 +1,6 @@
       module bc3lhs_m
 c
+        use mpi_def_m
         use pointer_data
 c
         implicit none
@@ -22,6 +23,8 @@ c
      &                        bit16 = 65536
 
 c
+c      write(*,'(a,i2,a)') '[',myrank,'] IN BC3ELAS_IF:'
+c
         do iblk = 1, nelblif
 c
           npro = lcblkif(1,iblk+1) - lcblkif(1,iblk)
@@ -40,7 +43,9 @@ c
 c
               BC(inode0,:) = umesh(inode0,:)
               BC(inode1,:) = umesh(inode1,:)
-              
+
+c      write(*,'(a,i4,6f12.4)') 'iel: ',iel,umesh(inode0,:),umesh(inode1,:)
+
               iBC(inode0) = ibclr(iBC(inode0), 14) 
               iBC(inode0) = ibclr(iBC(inode0), 15) 
               iBC(inode0) = ibclr(iBC(inode0), 16) 

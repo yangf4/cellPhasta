@@ -37,7 +37,7 @@ c
             real*8, intent(in) :: time
             real*8, intent(inout) :: sum_vi_area(:,:)
 c
-      integer :: i, iel, inode
+      integer :: i, iel, i0,i1,n
       real*8 :: r0,r1,n0(3),n1(3),t_ramp,c2
       real*8, parameter :: rmin = 0.01d0, rmax = 0.9d0,
      &                     vint = -1.0d0
@@ -75,30 +75,49 @@ c
 c
 c.... assemble the local residual arrays
 c
+       i0 = ienif0(38,1)
+       i1 = ienif1(38,1)
+c
+      do iel = 1,npro
+        do n = 1,nshl0
+c          write(*,200) myrank,iel,n,res(ienif0(iel,n),:)
+        enddo
+      enddo
+c
+      do iel = 1,npro
+        do n = 1,nshl0
+          if (ienif0(iel,n) .eq. i0) then
+c            write(*,200) myrank,iel,n,rl0(iel,n,:)
+          endif
+        enddo
+      enddo
+c
         call local (res, rl0, ienif0, nflow, 'scatter ', nshg,nshl0,npro,ipord,sbytes_,flops_)
+c      write(*,100) myrank,i0,res(i0,:)
+c      write(*,*)
+c      write(*,100) myrank,i1,res(i1,:)
+      do iel = 1,npro
+        do n = 1,nshl1
+          if (ienif1(iel,n) .eq. i1) then
+c            write(*,200) myrank,iel,n,rl1(iel,n,:)
+          endif
+        enddo
+      enddo
         call local (res, rl1, ienif1, nflow, 'scatter ', nshg,nshl1,npro,ipord,sbytes_,flops_)
+c      write(*,100) myrank,i1,res(i1,:)
+c
+      do iel = 1,npro
+        do n = 1,nshl0
+c          write(*,200) myrank,iel,n,res(ienif0(iel,n),:)
+        enddo
+      enddo
 c
         call local (sum_vi_area, sum_vi_area_l0, ienif0, nsd+1, 'scatter ', nshg, nshl0,npro,ipord,sbytes_,flops_)
         call local (sum_vi_area, sum_vi_area_l1, ienif1, nsd+1, 'scatter ', nshg, nshl1,npro,ipord,sbytes_,flops_)
-c      write(*,*) 'ienif0: ',ienif0(1,:)
-c      write(*,*) 'ienif1: ',ienif1(1,:)
-c      write(*,*) 'x   65:',x(65,:)
-c      write(*,*) 'x  131:',x(131,:)
-c      write(*,*) 'x  129:',x(129,:)
-c      write(*,*) 'x  203:',x(203,:)
-c      write(*,*) 'x 2871:',x(2871,:)
-c      write(*,*) 'x 2935:',x(2935,:)
-c      write(*,*) 'x 2937:',x(2937,:)
-c      write(*,*) 'x 2004:',x(2004,:)
-c      write(*,*) 'sum_vi_area   65:',sum_vi_area(65,:)
-c      write(*,*) 'sum_vi_area  131:',sum_vi_area(131,:)
-c      write(*,*) 'sum_vi_area  129:',sum_vi_area(129,:)
-c      write(*,*) 'sum_vi_area  203:',sum_vi_area(203,:)
-c      write(*,*) 'sum_vi_area 2871:',sum_vi_area(2871,:)
-c      write(*,*) 'sum_vi_area 2935:',sum_vi_area(2935,:)
-c      write(*,*) 'sum_vi_area 2937:',sum_vi_area(2937,:)
-c      write(*,*) 'sum_vi_area 2004:',sum_vi_area(2004,:)
 c
         call free_e3if
+c
+100   format('[',i2,'] res: ',i5,x,5e24.16)
+200   format('[',i2,'] rl0: ',i3,x,i1,x,5e24.16)
 c
       end subroutine asidgif_

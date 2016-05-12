@@ -1,5 +1,6 @@
       module e3if_m
 c
+        use mpi_def_m
         use hierarchic_m
         use matdat_def_m
         use e3if_defs_m
@@ -23,6 +24,7 @@ c
           real*8, dimension(nqpt), intent(in) :: qwtif0, qwtif1
 c
           integer :: intp
+      integer :: iel
 c
 c      write(*,*) 'In e3if...'
 c
@@ -106,6 +108,9 @@ c
             else
               call error ('wrong mater: ', 'calc vi', 0)
             endif
+c      do iel = 1,npro
+c        write(*,'(a,i4,a,i4,3f12.4)') '[',myrank,'] iel: ',iel,vi(iel,:)
+c      enddo
 c
             call calc_vi_area_node(sum_vi_area_l0,shp0,nshl0)
             call calc_vi_area_node(sum_vi_area_l1,shp1,nshl1)
@@ -316,6 +321,12 @@ c
 c
             call calc_diff_flux(fdiff0,var0(iel),prop0(iel))
             call calc_diff_flux(fdiff1,var1(iel),prop1(iel))
+      if (iel == 38) then
+c        write(*,500) myrank,iel,fconv0(:,1)
+c        write(*,500) myrank,iel,fdiff0(:,5)-fdiff1(:,5)
+c        write(*,500) myrank,iel,var0(iel)%grad_y(:,5)-var1(iel)%grad_y(:,5)
+      endif
+500   format('[',i2,'] ',i3,x,3e24.16)
 c
 c... calculate flux in normal direction...
 c
@@ -352,9 +363,10 @@ c
             ri1(iel,16:20) = ri1(iel,16:20) + 0.5 * ( f1n1(1:5) + f0n1(1:5) )
 c
 c...UPWIND????
+c   Flow is in n0 direction...
 c
-c      ri0(iel,16:20) = ri0(iel,16:20) + f1n0(1:5)
-c      ri1(iel,16:20) = ri1(iel,16:20) + f1n1(1:5)
+c      ri0(iel,16:20) = ri0(iel,16:20) + f0n0(1:5)
+c      ri1(iel,16:20) = ri1(iel,16:20) + f0n1(1:5)
 c
           enddo
 c

@@ -19,7 +19,9 @@ c
 c
 c          vi(:,isd) = beta * p**alpha * n(:,isd)
 c          vi(:,isd) = n(:,isd) !* 0.0005
-          vi(:,isd) = 0.0
+      vi(:,1) =  2.0d1
+      vi(:,2) =  0.0d0
+      vi(:,3) =  0.0d0
 c
         enddo
 c

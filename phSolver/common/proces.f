@@ -51,6 +51,7 @@ c
         real*8 c0, c1, c2, c3, x1, x2
         integer nn
 
+
 c        if ((irscale .ge. 0) .and. (myrank.eq.master)) then
 c           call setSPEBC(numnp, point2nfath, nsonmax)
 c        endif

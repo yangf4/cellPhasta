@@ -373,9 +373,8 @@ c
 c.... generate the boundary element blocks
 c
       call genbkb (ibksiz)
-
+c
       call genbkif (ibksiz)
-
 c
 c  Read in the nsons and ifath arrays if needed
 c

@@ -300,6 +300,7 @@ c
 c
         include "common.h"
         include "mpif.h"
+c#define DEBUG
 c
         interface 
           subroutine asidgif_
@@ -538,6 +539,14 @@ c
 !     &                           'd'//char(0), nshg, ndof, lstep)
 !endif //DEBUG
 c
+!      write(*,998) '[',myrank,'] in elmgmr AFTER INTERIOR.'
+!      do i = 1,nshg
+!        if (x(i,1) < 0.1001 .and. x(i,1) > 0.0999 .and. 
+!     &      x(i,2) < 0.0501 .and. x(i,2) > 0.0499 .and.
+!     &      x(i,3) < 0.0001 .and. x(i,3) > -0.0001)
+!     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
+!      enddo
+c
 c.... -------------------->   boundary elements   <--------------------
 c
 c.... loop over the boundary elements
@@ -599,8 +608,14 @@ c
 !     &                           'd'//char(0), nshg, nflow, lstep)
 !        call MPI_ABORT(MPI_COMM_WORLD) 
 !endif //DEBUG
-
-
+c
+!      write(*,998) '[',myrank,'] in elmgmr AFTER BOUNDARY.'
+!      do i = 1,nshg
+!        if (x(i,1) < 0.1001 .and. x(i,1) > 0.0999 .and. 
+!     &      x(i,2) < 0.0501 .and. x(i,2) > 0.0499 .and.
+!     &      x(i,3) < 0.0001 .and. x(i,3) > -0.0001)
+!     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
+!      enddo
 c
       ttim(80) = ttim(80) + secs(0.0)
 c
@@ -674,10 +689,10 @@ c
 c
 c.... Fill-up the global sparse LHS mass matrix
 c
-            call fillsparse_if( lhsk,mienif0(iblk)%p,mienif0(iblk)%p,col,row,egmassif00,nflow,nshg,nnz,nnz_tot)
-            call fillsparse_if( lhsk,mienif0(iblk)%p,mienif1(iblk)%p,col,row,egmassif01,nflow,nshg,nnz,nnz_tot)
-            call fillsparse_if( lhsk,mienif1(iblk)%p,mienif0(iblk)%p,col,row,egmassif10,nflow,nshg,nnz,nnz_tot)
-            call fillsparse_if( lhsk,mienif1(iblk)%p,mienif1(iblk)%p,col,row,egmassif11,nflow,nshg,nnz,nnz_tot)
+c            call fillsparse_if( lhsk,mienif0(iblk)%p,mienif0(iblk)%p,col,row,egmassif00,nflow,nshg,nnz,nnz_tot)
+c            call fillsparse_if( lhsk,mienif0(iblk)%p,mienif1(iblk)%p,col,row,egmassif01,nflow,nshg,nnz,nnz_tot)
+c            call fillsparse_if( lhsk,mienif1(iblk)%p,mienif0(iblk)%p,col,row,egmassif10,nflow,nshg,nnz,nnz_tot)
+c            call fillsparse_if( lhsk,mienif1(iblk)%p,mienif1(iblk)%p,col,row,egmassif11,nflow,nshg,nnz,nnz_tot)
 c
           endif
 
@@ -690,6 +705,19 @@ c
 c
         enddo if_blocks
 c
+!      write(*,998) '[',myrank,'] in elmgmr AFTER IFBLOCKS.'
+!      do i = 1,nshg
+!        if (x(i,1) < 0.1001 .and. x(i,1) > 0.0999 .and. 
+!     &      x(i,2) < 0.0501 .and. x(i,2) > 0.0499 .and.
+!     &      x(i,3) < 0.0001 .and. x(i,3) > -0.0001)
+!     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
+!      enddo
+c
+        if (numpe > 1) then
+          call commu (sum_vi_area, ilwork, nsd+1, 'in ')
+        endif
+        call MPI_BARRIER (MPI_COMM_WORLD,ierr)
+c
         do inode = 1,nshg
 c
 c ... NOT SURE IF THIS IS THE BEST IF :
@@ -697,12 +725,8 @@ c
           if (sum_vi_area(inode,nsd+1) > zero) then
             umesh(inode,:) = sum_vi_area(inode,:) / sum_vi_area(inode,nsd+1)
           endif
-c
         enddo
 c 
-c      write(*,*) 'umesh   65: ',umesh(65,:)
-c      write(*,*) 'umesh 2871: ',umesh(2871,:)
-c
         deallocate(sum_vi_area)
 c
 c
@@ -729,7 +753,6 @@ c          BDiag(:,5,5)=Bdiagvec(:,5)
 
 c.... -------------------->   communications <-------------------------
 c
-
       if (numpe > 1) then
         call commu (res  , ilwork, nflow  , 'in ')
 
@@ -737,13 +760,71 @@ c
 
         if(iprec .ne. 0) call commu (BDiag, ilwork, nflow*nflow, 'in ')
       endif
-
+c
+c------> BEGIN DEBUG <---------
+c
+!      write(*,998) '[',myrank,'] in elmgmr AFTER commu.'
+!      do i = 1,nshg
+!        if (x(i,1) < 0.1001 .and. x(i,1) > 0.0999 .and. 
+!     &      x(i,2) < 0.0501 .and. x(i,2) > 0.0499 .and.
+!     &      x(i,3) < 0.0001 .and. x(i,3) > -0.0001)
+!     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
+!      enddo
+c
+      do irank = 0,numpe-1
+        call MPI_Barrier (MPI_COMM_WORLD,ierr)
+        if (irank == myrank) then
+          numtask = ilwork(1)
+          itkbeg = 1
+          m = 0
+          write(*,990) myrank,numtask
+          do itask = 1, numtask
+            m = m + 1
+            iother = ilwork (itkbeg + 3)
+            numseg = ilwork (itkbeg + 4)
+            write(*,991) myrank,ilwork(itkbeg+1:itkbeg+5)
+      if (myrank == 0 .and. iother == 1 .or.
+     &    myrank == 1 .and. iother == 0) then
+        do is = 1,numseg
+          isgbeg = ilwork(itkbeg + 3 + 2*is)
+          lenseg = ilwork(itkbeg + 4 + 2*is)
+          isgend = isgbeg + lenseg - 1
+          do isg = isgbeg,isgend
+            write(*,801) myrank,is,isg,lenseg,x(isg,:)!,res(isg,:)
+          enddo
+        enddo
+      endif
+            itkbeg = itkbeg + 4 + 2*numseg
+          enddo
+        endif
+      enddo
+c
+801   format('[',i2,'] is,isgbeg,lenseg,isg,x:'3i4,x,3f8.3,x,5e24.16)
+990   format('[',i2,'] numtask:',i3)
+991   format('[',i2,'] itag, iacc, iother, numseg, isgbeg:',5i6)
+998   format(a,i2,a)
+999   format(a,i2,a,i6,3f7.3,5e24.16)
+c
+c--------> END DEBUG <--------------
 c
 c.... ---------------------->   post processing  <----------------------
 c
 c.... satisfy the BCs on the residual
 c
       call bc3Res (y,  iBC,  BC,  res,  iper, ilwork)
+c
+c------> BEGIN DEBUG <-----------
+c
+!      write(*,998) '[',myrank,'] in elmgmr AFTER bc3res.'
+!      do i = 1,nshg
+!        if (x(i,1) < 0.1001 .and. x(i,1) > 0.0999 
+!     & .and. x(i,2) < 0.0901 .and. x(i,2) > 0.0899
+!     & .and. x(i,3) < 0.0101 .and. x(i,3) > 0.0099
+!     &)
+!     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
+!      enddo
+c------> END DEBUG <-----------
+c
 c
 c.... satisfy the BCs on the block-diagonal preconditioner
 c

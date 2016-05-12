@@ -17,6 +17,7 @@ c
      &                  mat_prop, nummat, mexist,  datelas
         integer, parameter :: ieos_ideal_gas = 1
      &,                       ieos_liquid_1  = 2
+     &,                       ieos_solid_1   = 3
 c
         integer, parameter :: iprop_ideal_gas_mw    = 1  ! molecular weight
      &,                       iprop_ideal_gas_gamma = 2

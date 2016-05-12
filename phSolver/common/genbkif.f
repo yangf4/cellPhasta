@@ -86,7 +86,7 @@ c
            endif
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
-           call MPI_Barrier(MPI_COMM_WORLD,ierr) 
+c           call MPI_Barrier(MPI_COMM_WORLD,ierr) 
            call phio_readheader(fhandle, fname2 // char(0),
      &      c_loc(intfromfile), inine, dataInt, iotype)
 c
@@ -99,6 +99,10 @@ c
            nnface = intfromfile(7)       ! number of nodes on the interface
            lcsyst0= intfromfile(8)       ! element type 0
            lcsyst1= intfromfile(9)       ! element type 1
+
+           if (neltp==0) then
+              writeLock=1;
+           endif
 c
 c... reads all the connectivity data in one array
 c
@@ -114,10 +118,10 @@ c
            if(input_mode.ge.1) then
              write(fname2,"('material type interface',i1)") iblk
            else
-             write(fname2,"('material type interface')")
+             write(fname2,"('material type interface linear tetrahedron tetrahedron')")
            endif
 c
-           call MPI_Barrier(MPI_COMM_WORLD,ierr) 
+c           call MPI_Barrier(MPI_COMM_WORLD,ierr) 
            call phio_readheader(fhandle, fname2 // char(0),
      &      c_loc(intfromfile), itwo, dataInt, iotype)
            allocate(mattypeif(intfromfile(1),intfromfile(2)))

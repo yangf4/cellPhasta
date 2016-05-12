@@ -325,9 +325,10 @@ c============ Start the loop of time steps============================c
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 c
+          umesh = zero
           if ( iMsIpSc .eq. 1 )
      &      call tempMeshMo( x, umesh, iBC, BC(:,ndof+2:ndof+5) )
-c        
+c
         if(iramp.eq.1) 
      &        call BCprofileScale(vbc_prof,BC,yold)
 
@@ -502,7 +503,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       solinc,        rerr,          umesh)
                     endif
                       else if (mod(impl(1),100)/10 .eq. 2) then ! mfg solve
-c'     
+c     
 c.... preconditioned matrix-free GMRES solver
 c     
                         lhs=0
@@ -683,12 +684,14 @@ c
                      call itrCorrectElas(disp, elasDy)
 c
                      umesh = disp / Delt(1)
+c 
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
      &                              iper,   ilwork        )
 c
-                     call itrCorrectElas(x, disp)
                      umesh = disp / Delt(1)
+c
+                     call itrCorrectElas(x, disp)
 c
                   endif ! end of switch for flow or scalar or mesh-elastic update
                endif            !end of switch between solve or update
@@ -919,9 +922,6 @@ c         tcorewc2 = secs(0.0)
          endif
         
 c     call wtime
-
-      call destroyWallData
-      call destroyfncorp
 
  3000 continue !end of NTSEQ loop
 c     
