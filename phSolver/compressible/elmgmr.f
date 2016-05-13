@@ -297,6 +297,7 @@ c----------------------------------------------------------------------
 c
         use pointer_data
         use timedataC
+        use if_velocity_m
 c
         include "common.h"
         include "mpif.h"
@@ -386,7 +387,6 @@ c
         real*8, allocatable :: EGmass(:,:,:)
 c
         real*8, dimension(:,:,:), pointer :: egmassif00,egmassif01,egmassif10,egmassif11
-        real*8, pointer :: sum_vi_area(:,:)    ! interface velocity weighted by interfacea area
 c
         ttim(80) = ttim(80) - secs(0.0)
 c
@@ -623,8 +623,7 @@ c.... -------------------->   interface elements   <--------------------
 c
 c... loop over the interface element blocks
 c
-      allocate (sum_vi_area(nshg,nsd+1))
-      sum_vi_area = zero
+        sum_vi_area = zero
 c
         if_blocks: do iblk = 1, nelblif
 c
@@ -705,30 +704,6 @@ c
 c
         enddo if_blocks
 c
-!      write(*,998) '[',myrank,'] in elmgmr AFTER IFBLOCKS.'
-!      do i = 1,nshg
-!        if (x(i,1) < 0.1001 .and. x(i,1) > 0.0999 .and. 
-!     &      x(i,2) < 0.0501 .and. x(i,2) > 0.0499 .and.
-!     &      x(i,3) < 0.0001 .and. x(i,3) > -0.0001)
-!     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
-!      enddo
-c
-        if (numpe > 1) then
-          call commu (sum_vi_area, ilwork, nsd+1, 'in ')
-        endif
-        call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-c
-        do inode = 1,nshg
-c
-c ... NOT SURE IF THIS IS THE BEST IF :
-c
-          if (sum_vi_area(inode,nsd+1) > zero) then
-            umesh(inode,:) = sum_vi_area(inode,:) / sum_vi_area(inode,nsd+1)
-          endif
-        enddo
-c 
-        deallocate(sum_vi_area)
-c
 c
 c before the commu we need to rotate the residual vector for axisymmetric
 c boundary conditions (so that off processor periodicity is a dof add instead
@@ -777,23 +752,23 @@ c
           numtask = ilwork(1)
           itkbeg = 1
           m = 0
-          write(*,990) myrank,numtask
+!          write(*,990) myrank,numtask
           do itask = 1, numtask
             m = m + 1
             iother = ilwork (itkbeg + 3)
             numseg = ilwork (itkbeg + 4)
-            write(*,991) myrank,ilwork(itkbeg+1:itkbeg+5)
-      if (myrank == 0 .and. iother == 1 .or.
-     &    myrank == 1 .and. iother == 0) then
+!            write(*,991) myrank,ilwork(itkbeg+1:itkbeg+5)
+!      if (myrank == 0 .and. iother == 1 .or.
+!     &    myrank == 1 .and. iother == 0) then
         do is = 1,numseg
           isgbeg = ilwork(itkbeg + 3 + 2*is)
           lenseg = ilwork(itkbeg + 4 + 2*is)
           isgend = isgbeg + lenseg - 1
           do isg = isgbeg,isgend
-            write(*,801) myrank,is,isg,lenseg,x(isg,:)!,res(isg,:)
+!            write(*,801) myrank,is,isg,lenseg,x(isg,:)!,res(isg,:)
           enddo
         enddo
-      endif
+!      endif
             itkbeg = itkbeg + 4 + 2*numseg
           enddo
         endif
