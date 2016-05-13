@@ -38,8 +38,7 @@ c
       use turbSA
       use wallData
       use fncorpmod
-      use bc3lhs_m
-c      use mesh_motion_m
+      use if_velocity_m
 
         include "common.h"
         include "mpif.h"
@@ -202,6 +201,7 @@ c.... we may not need this anymore, since we have them in readnblk.
           x     = xn
 c          umesh = zero
         endif
+        call init_sum_vi_area(nshg,nsd)
 c
 c..........................................
         rerr = zero
@@ -603,21 +603,35 @@ c'
 c
                   else if(isolve.eq.10) then ! this is a mesh-elastic solve
 c
-                     lhs = 1  
-                     iprec=lhs
-                     ndofelas = nshl * nelas
+                      lhs = 1  
+                      iprec=lhs
+                      ndofelas = nshl * nelas
+c 
+      do inode = 1,nshg
+c        write(*,10) myrank,inode,x(inode,:),ibits(ibc(inode),14,3)
+      enddo
+10    format('[',i2,'] ',i6,3f7.3,x,i4)
 c
                      if ( iMsIpSc .eq. 2 ) then 
-                       call bc3elas_if (BC(:,ndof+2:ndof+4),    iBC,  
-     &                                  umesh, lcblkif,  nshg,  ndofBC,
-     &                                  nsd,   nelblif,  MAXBLK )
+                       call set_if_velocity (BC(:,ndof+2:ndof+4),  iBC, 
+     &                                umesh,    x,     ilwork,
+     &                                lcblkif,  nshg,  ndofBC,
+     &                                nsd,   nelblif,  MAXBLK, nlwork )
                      endif
-c
+c 
+      do inode = 1,nshg
+c        write(*,100) 'BEFORE: ',myrank, inode, x(inode,:), disp(inode,:)
+      enddo
                      call itrBCElas(umesh,  disp,  iBC, 
      &                              BC(:,ndof+2:ndof+5),
      &                              iper,   ilwork         )
 c
 c.... call to SolGMRElas ... For mesh-elastic solve
+c
+      do inode = 1,nshg
+c        write(*,100) 'AFTER: ',myrank, inode, x(inode,:), disp(inode,:)
+      enddo
+100   format(a,'[',i2,'] ',i6,3f7.3,x,7e24.16)
 c
                      call SolGMRElas (x,        disp,      iBC,    BC,
      &                                colm,     rowp,      meshq,  
@@ -924,6 +938,8 @@ c         tcorewc2 = secs(0.0)
 c     call wtime
 
  3000 continue !end of NTSEQ loop
+c
+        call destruct_sum_vi_area
 c     
 c.... ---------------------->  Post Processing  <----------------------
 c     
