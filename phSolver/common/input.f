@@ -222,8 +222,8 @@ c
  
         write (23,*)"  scdiff(5),nsclr,isclr,nsolt"
         write (23,*)  scdiff(5),nsclr,isclr,nsolt
-        write (23,*) " flxID(10,20), Force(3),HFlux, nsrflist(0:20)"
-        write (23,*)  flxID(10,20), Force(3),HFlux, nsrflist(0:20)
+        write (23,*) " flxID(10,20), Force(3,100),HFlux(100), nsrfCM, nsrflist(0:20)"
+        write (23,*)  flxID(10,20), Force(3,100),HFlux(100), nsrfCM, nsrflist(0:20)
         write (23,*) " numnp,  numel,  numelb, numelif, numpbc, nen,    nfaces,"
         write (23,*)  numnp,  numel,  numelb, numelif, numpbc, nen,    nfaces,
      &                  numflx, ndof,   iALE,   iMsIpSc,icoord, navier,

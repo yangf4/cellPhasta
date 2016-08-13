@@ -318,7 +318,7 @@ c
 c
 c.... compute the forces on the body
 c
-           where (nsrflist(iBCB(:,2)).eq.1)
+           where (nsrflist(iBCB(:,2)).ge.1)
               tau1n = ( tau1n - bnorm(:,1)*pres)  * WdetJb
               tau2n = ( tau2n - bnorm(:,2)*pres)  * WdetJb
               tau3n = ( tau3n - bnorm(:,3)*pres)  * WdetJb
@@ -332,10 +332,9 @@ c Note that the sign has changed from the compressible code to
 c make it consistent with the way the bflux calculates the forces
 c Note also that Hflux has moved to e3btemp
 c
-          Force(1) = Force(1) - sum(tau1n)
-          Force(2) = Force(2) - sum(tau2n)
-          Force(3) = Force(3) - sum(tau3n)
-
+          Force(1,nsrflist(iBCB(:,2))) = Force(1,nsrflist(iBCB(:,2))) - sum(tau1n)
+          Force(2,nsrflist(iBCB(:,2))) = Force(2,nsrflist(iBCB(:,2))) - sum(tau2n)
+          Force(3,nsrflist(iBCB(:,2))) = Force(3,nsrflist(iBCB(:,2))) - sum(tau3n)
 c
         endif
 c

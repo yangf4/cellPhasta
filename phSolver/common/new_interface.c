@@ -229,7 +229,7 @@ void countfieldstowriterestart()
 
   if (conpar.iALE == 2) {
 //hardcoded, it should be + 3, including meshQ
-    nfields = nfields + 2; 
+    nfields = nfields + 3; 
   }
 
   outpar.nsynciofieldswriterestart = nfields;

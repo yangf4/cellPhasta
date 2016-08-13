@@ -55,14 +55,15 @@ c.... -------------------->  Aerodynamic Forces  <----------------------
 c
 c.... output the forces and the heat flux
 c
+      do i = 1, nsrfCM
       if (numpe > 1) then
-         Forin = (/ Force(1), Force(2), Force(3), HFlux, 
+         Forin = (/ Force(1,i), Force(2,i), Force(3,i), HFlux(i), 
      &              entrop /)
          call MPI_BARRIER(MPI_COMM_WORLD, ierr)
          call MPI_ALLREDUCE (Forin(1), Forout(1),5,
      &        MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-         Force = Forout(1:3)
-         HFlux = Forout(4)
+         Force(1:3,i) = Forout(1:3)
+         HFlux(i) = Forout(4)
          entrop= Forout(5)
       endif
 
@@ -94,10 +95,11 @@ c
       ftot(3)=sum(Ftots(3,0:MAXSURF))
 
       if (myrank .eq. master) then
-         write (iforce,1000) lstep, (Force(i), i=1,nsd), 
-     &        HFlux,spmasss,(ftot(i),i=1,nsd)
+         write (iforce,1000) lstep, i, (Force(j,i), j=1,nsd), 
+     &        HFlux(i),spmasss,(ftot(j),j=1,nsd)
          call flush(iforce)
       endif
+      enddo
    
       if((spmasss.ne.0) .and. (matflg(5,1).ne.0))then ! we are doing
                                                       ! force adjustment 
@@ -105,11 +107,11 @@ c
          
          select case ( matflg(5,1) )
          case ( 1 )             ! standard linear body force
-            fwall=Force(1)
+            fwall=sum(Force(1,:))
             vlngth=xlngth
          case ( 2 )       
          case ( 3 )     
-            fwall=Force(3)
+            fwall=sum(Force(3,:))
             vlngth=zlngth
          end select
 

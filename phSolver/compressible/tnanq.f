@@ -24,7 +24,8 @@
       if (summed.ge.1) then
         close(1001)        !Hack to close the varts files and flush the buffers. 
         call write_restart(myrank,9876543,nshg,n,u,u)
-        call error('tnanq   ',arrname,nnanq)
+c        call error('tnanq   ',arrname,nnanq)
+        call error('tnanq   ',arrname,nlarge)
       endif
       return
 

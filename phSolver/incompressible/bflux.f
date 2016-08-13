@@ -234,9 +234,9 @@ c
         do n = 1, numflx
            flxTot = flxTot + flxres(nodflx(n),:)
         enddo
-        Force(1) = flxTot(1)
-        Force(2) = flxTot(2)
-        Force(3) = flxTot(3)
+        Force(1,1) = flxTot(1)
+        Force(2,1) = flxTot(2)
+        Force(3,1) = flxTot(3)
       else
 c       need to call commu for procs. with no flux nodes
         if(numpe > 1) then
@@ -424,7 +424,7 @@ c
       call getbnodes(lnode)
 
       do i=1, npro 
-         if (nsrflist(iBCB(i,2)).eq.1) then
+         if (nsrflist(iBCB(i,2)).ge.1) then
             do j=1, nshlb
                nodelcl = lnode(j)
                flg(abs(ienb(i,nodelcl)))=flg(abs(ienb(i,nodelcl)))+1  

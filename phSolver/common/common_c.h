@@ -226,8 +226,10 @@ extern "C" {
 
   extern struct { 
     double flxID[MAXSURF+1][10] ;
-    double Force[3];
-    double HFlux;
+    double Force[MAXSURF][3];
+    double PresFor[MAXSURF][3];
+    double HFlux[MAXSURF];
+    int nsrfCM;
     int nsrflist[MAXSURF+1];
     int isrfIM;
     double flxIDsclr[MAXSURF][4];

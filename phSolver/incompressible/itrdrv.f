@@ -766,10 +766,10 @@ c
                      iter   = iter+1
                      ifuncs(1)  = ifuncs(1) + 1
 c     
-                     Force(1) = zero
-                     Force(2) = zero
-                     Force(3) = zero
-                     HFlux    = zero
+                     Force(1,:) = zero
+                     Force(2,:) = zero
+                     Force(3,:) = zero
+                     HFlux(:)   = zero
                      lhs = 1 - min(1,mod(ifuncs(1)-1,LHSupd(1))) 
 
                      call SolFlow(y,          ac,        u,

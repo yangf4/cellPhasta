@@ -361,11 +361,11 @@ int input_fform(phSolver::Input& inp)
         turbvari.ierrsmooth = inp.GetValue("Number of Error Smoothing Iterations");
 
     for(i=0;i<MAXSURF+1; i++) aerfrc.nsrflist[i] = 0;
-    int nsrfCM = inp.GetValue("Number of Force Surfaces");
-    if (nsrfCM > 0) {
+    aerfrc.nsrfCM = inp.GetValue("Number of Force Surfaces");
+    if (aerfrc.nsrfCM > 0) {
       ivec = inp.GetValue("Surface ID's for Force Calculation");
-      for(i=0; i< nsrfCM; i++){
-        aerfrc.nsrflist[ivec[i]] = 1;
+      for(i=0; i< aerfrc.nsrfCM; i++){
+        aerfrc.nsrflist[ivec[i]] = i + 1;
         //        cout <<"surface in force list "<< ivec[i] << endl;
       }
       ivec.erase(ivec.begin(),ivec.end());

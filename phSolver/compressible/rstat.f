@@ -22,6 +22,7 @@ c
         dimension res(nshg,nflow)
         dimension rtmp(nshg), nrsmax(1), ilwork(nlwork)
         dimension Forin(4), Forout(4)
+        dimension Presin(3), Presout(3)
 !SCATTER        dimension irecvcount(numpe), resvec(numpe)
 c        integer TMRC
 
@@ -68,22 +69,29 @@ c.... -------------------->  Aerodynamic Forces  <----------------------
 c
 c.... output the forces and the heat flux
 c
+      do i = 1, nsrfCM
         if (iter .eq. nitr) then
-          Forin = (/ Force(1), Force(2), Force(3), HFlux /)
+          Forin  = (/ Force(1,i), Force(2,i), Force(3,i), HFlux(i) /)
+          Presin = (/ PresFor(1,i), PresFor(2,i), PresFor(3,i) /)
           if (numpe > 1) then
-          call MPI_REDUCE (Forin(1), Forout(1), 4, MPI_DOUBLE_PRECISION,
+            call MPI_REDUCE ( Forin(1),  Forout(1), 4, MPI_DOUBLE_PRECISION,
      &                                   MPI_SUM, master, 
      &                                   MPI_COMM_WORLD,ierr)
+            call MPI_REDUCE (Presin(1), Presout(1), 3, MPI_DOUBLE_PRECISION,
+     &                                   MPI_SUM, master, 
+     &                                   MPI_COMM_WORLD,ierr)
+            Force(1:3,i) = Forout(1:3)
+            PresFor(:,i) = Presout
+            HFlux(i) = Forout(4)
           endif
-          Force = Forout(1:3)
-          HFlux = Forout(4)
           if (myrank .eq. master) then
-             write (iforce,1000) lstep+1, (Force(i), i=1,nsd), HFlux, 
+             write (iforce,1000) lstep+1, i, (Force(j,i), j=1,nsd), HFlux(i), 
      &                           spmasss
+             write (iforce,1000) lstep+1, i, (PresFor(j,i), j=1,nsd)
              call flush(iforce)
           endif
         endif
-
+      enddo
 c
 c.... ----------------------->  Convergence  <-------------------------
 c
@@ -159,7 +167,7 @@ c.... return
 c
         return
 c
-1000    format(1p,i6,5e13.5)
+1000    format(1p,i6,i6,5e13.5)
 2000    format(1p,i6,e10.3,e10.3,3x,'(',i4,')',3x,'<',i6,'|',i4,'>',
      &         ' [',i3,'-',i3,']',i10)
 c
@@ -330,23 +338,24 @@ c
 c.... -------------------->  Aerodynamic Forces  <----------------------
 c
 c.... output the forces and the heat flux
-c
+c 
+      do i = 1, nsrfCM
         if (iter .eq. nitr) then
-          Forin = (/ Force(1), Force(2), Force(3), HFlux /)
+          Forin = (/ Force(1,i), Force(2,i), Force(3,i), HFlux(i) /)
           if (numpe > 1) then
-          call MPI_REDUCE (Forin(1), Forout(1), 4, MPI_DOUBLE_PRECISION,
+            call MPI_REDUCE (Forin(1), Forout(1), 4, MPI_DOUBLE_PRECISION,
      &                                   MPI_SUM, master, 
      &                                   MPI_COMM_WORLD,ierr)
+            Force(1:3,i) = Forout(1:3)
+            HFlux(i) = Forout(4)
           endif
-          Force = Forout(1:3)
-          HFlux = Forout(4)
           if (myrank .eq. master) then
-             write (iforce,1000) lstep+1, (Force(i), i=1,nsd), HFlux, 
+             write (iforce,1000) lstep, i, (Force(j,i), j=1,nsd), HFlux(i), 
      &                           spmasss
              call flush(iforce)
           endif
         endif
-
+      enddo
 c
 c.... approximate the number of entries
 c

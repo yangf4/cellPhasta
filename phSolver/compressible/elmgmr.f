@@ -746,33 +746,33 @@ c
 !     &   write(*,999) '[',myrank,'] :',i,x(i,:),res(i,:)
 !      enddo
 c
-      do irank = 0,numpe-1
-        call MPI_Barrier (MPI_COMM_WORLD,ierr)
-        if (irank == myrank) then
-          numtask = ilwork(1)
-          itkbeg = 1
-          m = 0
+!      do irank = 0,numpe-1
+!        call MPI_Barrier (MPI_COMM_WORLD,ierr)
+!        if (irank == myrank) then
+!          numtask = ilwork(1)
+!          itkbeg = 1
+!          m = 0
 !          write(*,990) myrank,numtask
-          do itask = 1, numtask
-            m = m + 1
-            iother = ilwork (itkbeg + 3)
-            numseg = ilwork (itkbeg + 4)
+!          do itask = 1, numtask
+!            m = m + 1
+!            iother = ilwork (itkbeg + 3)
+!            numseg = ilwork (itkbeg + 4)
 !            write(*,991) myrank,ilwork(itkbeg+1:itkbeg+5)
 !      if (myrank == 0 .and. iother == 1 .or.
 !     &    myrank == 1 .and. iother == 0) then
-        do is = 1,numseg
-          isgbeg = ilwork(itkbeg + 3 + 2*is)
-          lenseg = ilwork(itkbeg + 4 + 2*is)
-          isgend = isgbeg + lenseg - 1
-          do isg = isgbeg,isgend
+!        do is = 1,numseg
+!          isgbeg = ilwork(itkbeg + 3 + 2*is)
+!          lenseg = ilwork(itkbeg + 4 + 2*is)
+!          isgend = isgbeg + lenseg - 1
+!          do isg = isgbeg,isgend
 !            write(*,801) myrank,is,isg,lenseg,x(isg,:)!,res(isg,:)
-          enddo
-        enddo
+!          enddo
+!        enddo
 !      endif
-            itkbeg = itkbeg + 4 + 2*numseg
-          enddo
-        endif
-      enddo
+!            itkbeg = itkbeg + 4 + 2*numseg
+!          enddo
+!        endif
+!      enddo
 c
 801   format('[',i2,'] is,isgbeg,lenseg,isg,x:'3i4,x,3f8.3,x,5e24.16)
 990   format('[',i2,'] numtask:',i3)

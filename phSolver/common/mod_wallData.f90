@@ -44,7 +44,7 @@
           !a non unit dot product from elements surrounding a wall vertex but
           !acos(0.75) is a pretty big angle. On coarse meshes this number may
           !have to be dialed down to get normal on curved walls correct. 
-    
+          if ( allocated(wNorm) ) deallocate (wNorm)
           allocate(wNorm(nshg,nsd))              
           wNorm = 0
     

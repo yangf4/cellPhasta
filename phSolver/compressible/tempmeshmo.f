@@ -11,7 +11,7 @@ c
       dimension iBC(nshg),    BC(nshg,4)
       integer   casenumbeir, offset, istp
       real*8    dyn_org   ! dynamic origin
-      real*8    loc(444)
+      real*8    loc(500)
       real*8    norm 
 c
 c.... Update ALE mesh coordinates x
@@ -611,7 +611,7 @@ c.... end test case 7
 c
 c
 c.... test case 8
-c.... delay 200 steps then go x direction
+c.... delay 300 steps then go x direction
 c.... mimic the real experiment. 
 c
       if (casenumber .eq. 8) then
@@ -625,6 +625,7 @@ c
         do i = 426,444
           loc(i) = loc(i-1) - 0.1052631
         enddo
+        loc(445:470) = 0.5
         dyn_org = 0.0
         do i = 300,lstep      
           dyn_org = dyn_org + loc(i-1) * Delt(1)
@@ -634,21 +635,25 @@ c
      &        ((x(i,1)) .gt. -119e-6) .and. ((x(i,1)) .lt. 279e-6) .and.
      &        (abs(x(i,2)) .lt. 12e-6) .and.
      &        (abs(x(i,3)) .lt. 12e-6) ) then
-            if ( (lstep .ge. 300) .and. (lstep .lt. 425) ) then
+            if ( (lstep .ge. 300) .and. (lstep .lt. 435) ) then
               BC(i,1)   = loc(lstep)
               BC(i,2)   = zero
               BC(i,3)   = zero
-            else if ( lstep .ge. 425 ) then
+            else if ( lstep .ge. 435 ) then
               if ( x(i,1) .ge. dyn_org ) then            
                 disp(i,1) = -0.05 * (x(i,1) - dyn_org) 
+c                disp(i,1) = -0.0375 * (x(i,1) - dyn_org) 
               else 
-                disp(i,1) = 0.0
+                disp(i,1) = 0.0 
+c                disp(i,1) = -0.0125 * (x(i,1) - dyn_org) 
               endif
               disp(i,2) =  0.01274 *  x(i,2)
               if ( x(i,3) .ge. 0.0 ) then
                 disp(i,3) = 0.02548 * x(i,3)
+c                disp(i,3) = 0.01911 * x(i,3)
               else
                 disp(i,3) = 0.0
+c                disp(i,3) = 0.0637  * x(i,3)
               endif
               BC(i,1)   = disp(i,1) / Delt(1) + loc(lstep)
               BC(i,2)   = disp(i,2) / Delt(1)
@@ -667,6 +672,70 @@ c
 c
 c.... end test case 8
 c
+c
+c.... test case 9
+c.... delay 300 steps then go x direction
+c.... mimic the real experiment. 
+c
+      if (casenumber .eq. 9) then
+        loc(1:300)   = 0.0
+        loc(301:377) = 1.6924 * 1e-6
+        loc(378:390) = 1.8338 * 1e-6
+        loc(391:402) = 1.8738 * 1e-6
+        loc(403:415) = 2.0562 * 1e-6
+        loc(416:427) = 2.3090 * 1e-6
+        loc(428:440) = 2.2736 * 1e-6
+        loc(441:452) = 1.7806 * 1e-6
+
+        dyn_org = 0.0
+        do i = 300,lstep      
+          dyn_org = dyn_org + loc(i-1) 
+        enddo
+        do i = 1,numnp
+          if ( (ibits(iBC(i),14,3) .eq. 7) .and. 
+     &        ((x(i,1)) .gt. -119e-6) .and. ((x(i,1)) .lt. 279e-6) .and.
+     &        (abs(x(i,2)) .lt. 12e-6) .and.
+     &        (abs(x(i,3)) .lt. 12e-6) ) then
+c            if ( lstep. eq. 1 )
+c     &        write(*,*) myrank, i,  x(i,1), x(i,2), x(i,3)
+            if ( (lstep .ge. 300) .and. (lstep .lt. 435) ) then
+              BC(i,1)   = loc(lstep) / Delt(1)
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+            else if ( lstep .ge. 435 ) then
+              if ( x(i,1) .ge. dyn_org ) then            
+                disp(i,1) = -0.05 * (x(i,1) - dyn_org) 
+c                disp(i,1) = -0.0375 * (x(i,1) - dyn_org) 
+              else 
+                disp(i,1) = 0.0 
+c                disp(i,1) = -0.0125 * (x(i,1) - dyn_org) 
+              endif
+              disp(i,2) =  0.01274 *  x(i,2)
+              if ( x(i,3) .ge. 0.0 ) then
+                disp(i,3) = 0.02548 * x(i,3)
+c                disp(i,3) = 0.01911 * x(i,3)
+              else
+                disp(i,3) = 0.0
+c                disp(i,3) = 0.0637  * x(i,3)
+              endif
+              BC(i,1)   = disp(i,1) / Delt(1) + loc(lstep) / Delt(1)
+              BC(i,2)   = disp(i,2) / Delt(1)
+              BC(i,3)   = disp(i,3) / Delt(1)
+            else 
+              BC(i,1)   = zero
+              BC(i,2)   = zero
+              BC(i,3)   = zero
+            endif ! end if larger than ramping time
+            umesh(i,1)= BC(i,1)
+            umesh(i,2)= BC(i,2)
+            umesh(i,3)= BC(i,3)
+          endif ! end if inside channel
+        enddo ! end loop numnp
+      endif ! end if case 9
+c
+c.... end test case 9
+c
+
       return
       end
 c

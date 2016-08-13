@@ -88,10 +88,17 @@ c
      &            tau2n(npro),                 tau3n(npro),
      &            heat(npro)
 c
+        dimension pres1n(npro),                pres2n(npro),
+     &            pres3n(npro)
+c
         dimension uml(npro,nshl,nsd),          umn(npro),
      &            um1(npro),                   um2(npro),  
      &            um3(npro)
 c
+c.... hardcoded
+        real*8    loc(500),                dyn_org
+        integer   countWrong
+c.... hardcoded
         dimension lnode(27),               sgn(npro,nshl),
      &            shape(npro,nshl),        shdrv(npro,nsd,nshl)
 c
@@ -342,7 +349,8 @@ c  if we have a nonzero value then
 c  calculate the fluxes through this surface 
 c
            iface = abs(iBCB(iel,2))
-           if (iface .ne. 0 .and. ires.ne.2) then
+c           if (iface .ne. 0 .and. ires.ne.2) then
+           if (nsrflist(iface) .ne. 0 .and. ires.ne.2) then
               flxID(1,iface) =  flxID(1,iface) + WdetJb(iel)! measure area too
 c              flxID(2,iface) =  flxID(2,iface) - WdetJb(iel) * un(iel)
               flxID(2,iface) =  flxID(2,iface) - WdetJb(iel) * rou(iel)
@@ -362,27 +370,106 @@ c              flxID(2,iface) =  flxID(2,iface) - WdetJb(iel) * un(iel)
 c
 c.... -------------------->  Aerodynamic Forces  <---------------------
 c
+        pres1n = zero
+        pres2n = zero
+        pres3n = zero
+ 
         if ((ires .ne. 2) .and. (iter .eq. nitr)) then
 c
 c.... compute the forces on the body
 c
-          where (.not.btest(iBCB(:,1),0) )
-            tau1n = ( pres * bnorm(:,1) - tau1n ) * WdetJb
-            tau2n = ( pres * bnorm(:,2) - tau2n ) * WdetJb
-            tau3n = ( pres * bnorm(:,3) - tau3n ) * WdetJb
-            heat  = - heat * WdetJb
-          elsewhere
-            tau1n = zero
-            tau2n = zero
-            tau3n = zero
-            heat  = zero
-          endwhere
+c.... DEBUGGING
+c          where (nsrflist(iBCB(:,2)).ge.1)
+c            tau1n = ( pres * bnorm(:,1) - tau1n ) * WdetJb
+c            tau2n = ( pres * bnorm(:,2) - tau2n ) * WdetJb
+c            tau3n = ( pres * bnorm(:,3) - tau3n ) * WdetJb
+c            pres1n =  pres * bnorm(:,1) * WdetJb
+c            pres2n =  pres * bnorm(:,2) * WdetJb
+c            pres3n =  pres * bnorm(:,3) * WdetJb
+c            heat  = - heat * WdetJb
+c          elsewhere
+c            tau1n = zero
+c            tau2n = zero
+c            tau3n = zero
+c            pres1n = zero
+c           pres2n = zero
+c            pres3n = zero
+c            heat  = zero
+c          endwhere
 c
-          Force(1) = Force(1) + sum(tau1n)
-          Force(2) = Force(2) + sum(tau2n)
-          Force(3) = Force(3) + sum(tau3n)
-          HFlux    = HFlux    + sum(heat)
+c.... HARDCODED
+c        loc(1:300)   = 0.0
+c        loc(301:377) = 1.6924 * 1e-6
+c        loc(378:390) = 1.8338 * 1e-6
+c        loc(391:402) = 1.8738 * 1e-6
+c        loc(403:415) = 2.0562 * 1e-6
+c        loc(416:427) = 2.3090 * 1e-6
+c        loc(428:440) = 2.2736 * 1e-6
+c        loc(441:452) = 1.7806 * 1e-6
+
+c        dyn_org = 0.0
+c        do i = 300,lstep      
+c          dyn_org = dyn_org + loc(i-1) 
+c        enddo
+c        countWrong = 0; 
+c.... HARDCODED
 c
+        do i = 1, npro
+          if (nsrflist(iBCB(i,2)).ge.1) then
+c            if ((xlb(i,1,1) .ge. dyn_org) .and. (iBCB(i,2) .eq. 10)) then
+c               iBCB(i,2)  = 20
+c               countWrong = countWrong + 1 
+c            endif
+c            if ((xlb(i,1,1). lt. dyn_org) .and. (iBCB(i,2) .eq. 20)) then
+c               iBCB(i,2)  = 10
+c               countWrong = countWrong + 1
+c            endif
+            tau1n(i) = ( pres(i) * bnorm(i,1) - tau1n(i) ) * WdetJb(i)
+            tau2n(i) = ( pres(i) * bnorm(i,2) - tau2n(i) ) * WdetJb(i)
+            tau3n(i) = ( pres(i) * bnorm(i,3) - tau3n(i) ) * WdetJb(i)
+            pres1n(i) =  pres(i) * bnorm(i,1) * WdetJb(i)
+            pres2n(i) =  pres(i) * bnorm(i,2) * WdetJb(i)
+            pres3n(i) =  pres(i) * bnorm(i,3) * WdetJb(i)
+            heat(i)  = - heat(i) * WdetJb(i)
+          else
+            tau1n(i)  = zero
+            tau2n(i)  = zero
+            tau3n(i)  = zero
+            pres1n(i) = zero
+            pres2n(i) = zero
+            pres3n(i) = zero
+            heat(i)   = zero
+          endif
+            Force(1,nsrflist(iBCB(i,2))) =
+     &      Force(1,nsrflist(iBCB(i,2))) + tau1n(i)
+            Force(2,nsrflist(iBCB(i,2))) = 
+     &      Force(2,nsrflist(iBCB(i,2))) + tau2n(i)
+            Force(3,nsrflist(iBCB(i,2))) =
+     &      Force(3,nsrflist(iBCB(i,2))) + tau3n(i)
+            PresFor(1,nsrflist(iBCB(i,2))) =
+     &      PresFor(1,nsrflist(iBCB(i,2))) + pres1n(i)
+            PresFor(2,nsrflist(iBCB(i,2))) =
+     &      PresFor(2,nsrflist(iBCB(i,2))) + pres2n(i)
+            PresFor(3,nsrflist(iBCB(i,2))) =
+     &      PresFor(3,nsrflist(iBCB(i,2))) + pres3n(i)
+            HFlux(nsrflist(iBCB(i,2))) =
+     &      HFlux(nsrflist(iBCB(i,2))) + heat(i)
+          enddo
+c... END DEBUGGING
+c
+c          if (countWrong .gt. 0) write(*,*) 'countWrong = ', countWrong
+c... OLD lines
+c          Force(1,nsrflist(iBCB(:,2))) = Force(1,nsrflist(iBCB(:,2))) + sum(tau1n)
+c          Force(2,nsrflist(iBCB(:,2))) = Force(2,nsrflist(iBCB(:,2))) + sum(tau2n)
+c          Force(3,nsrflist(iBCB(:,2))) = Force(3,nsrflist(iBCB(:,2))) + sum(tau3n)
+c          PresFor(1,nsrflist(iBCB(:,2))) =
+c     &    PresFor(1,nsrflist(iBCB(:,2))) + sum(pres1n)
+c          PresFor(2,nsrflist(iBCB(:,2))) =
+c     &    PresFor(2,nsrflist(iBCB(:,2))) + sum(pres2n)
+c          PresFor(3,nsrflist(iBCB(:,2))) =
+c     &    PresFor(3,nsrflist(iBCB(:,2))) + sum(pres3n)
+c          HFlux(nsrflist(iBCB(:,2)))   = HFlux(nsrflist(iBCB(:,2)))   + sum(heat)
+c... End OLD lines
         endif
 c
 c.... end of integration loop

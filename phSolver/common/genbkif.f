@@ -144,9 +144,9 @@ c
             endif
           enddo
 c
-          if (mattype0 == mattype1) then
-            call error('genbkif ','Wrong interface mattype in geombc',0)
-          endif
+c          if (mattype0 == mattype1) then
+c            call error('genbkif ','Wrong interface mattype in geombc',0)
+c          endif
 c
           if(writeLock==0) then
 c
