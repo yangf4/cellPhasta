@@ -517,11 +517,11 @@ int input_fform(phSolver::Input& inp)
     vec.erase(vec.begin(),vec.end());
 
 //for mesh-elastic--------------------------------------------
-    vec = inp.GetValue("Lame Constant Lamda");
+    vec = inp.GetValue("Mesh Elastic Youngs Modulus");
       matdat.datelas[0][0] = vec[0];
     vec.erase(vec.begin(),vec.end());
 
-    vec = inp.GetValue("Lame Constant Mu");
+    vec = inp.GetValue("Mesh Elastic Poisson Ratio");
       matdat.datelas[1][0] = vec[0];
     vec.erase(vec.begin(),vec.end());
 //for mesh-elastic--------------------------------------------

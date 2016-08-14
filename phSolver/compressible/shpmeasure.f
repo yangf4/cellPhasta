@@ -15,15 +15,15 @@ c
      &            tetVolm(npro),              tetSumEdge(npro),
      &            tetEdgeLength(npro, 6),     specArea(npro),
      &            surfArea(npro, 4) 
-        integer measureMethod
+        integer meshqMeasure
 c
 c---------------------------------------------------------
 c          
        call localx(x,      xl,     ien,    nsd,    'gather  ')
-c
-       measureMethod = 1
-c  
-       if ((measureMethod .ge. 1) .and. (measureMethod .le. 2)) then
+c... hardcoded
+       meshqMeasure = 2
+c... hardcoded
+       if ((meshqMeasure .ge. 1) .and. (meshqMeasure .le. 2)) then
        tetEdge(:,1,:) = xl(:,1,:) - xl(:,4,:)
        tetEdge(:,2,:) = xl(:,2,:) - xl(:,4,:)
        tetEdge(:,3,:) = xl(:,3,:) - xl(:,4,:)
@@ -41,7 +41,7 @@ c
 c
 c... if mesaure method = mean ratio
 c
-       if (measureMethod .eq. 1) then
+       if (meshqMeasure .eq. 1) then
          tetSumEdge(:) = tetEdge(:,1,1) * tetEdge(:,1,1)
      &                 + tetEdge(:,1,2) * tetEdge(:,1,2)
      &                 + tetEdge(:,1,3) * tetEdge(:,1,3)
@@ -71,12 +71,12 @@ c
             endif
          enddo
 c
-       endif ! end measureMethod = 1, mean ratio
+       endif ! end meshqMeasure = 1, mean ratio
 c
-c... if measure method = aspect ratio beta
+c... if meshq measure method = aspect ratio beta
 c...  aspect ratio = CR/(3*IR) 
 c
-       if (measureMethod .eq. 2) then
+       if (meshqMeasure .eq. 2) then
          tetEdgeLength(:,:) = sqrt(
      &                        tetEdge(:,:,1)*tetEdge(:,:,1)   
      &                      + tetEdge(:,:,2)*tetEdge(:,:,2) 
@@ -117,8 +117,8 @@ c
          meshq(:) = specArea(:) * (surfArea(:,1)+surfArea(:,2)
      &     +surfArea(:,3)+surfArea(:,4)) /288.0 /tetVolm(:) /tetVolm(:)
 c
-       endif ! end measureMethod = 2, aspect ratio = CR/(3*IR) 
-       endif ! end if measureMethod = 1 or 2
+       endif ! end meshqMeasure = 2, aspect ratio = CR/(3*IR) 
+       endif ! end if meshqMeasure = 1 or 2
 c
 c.... return
 c
