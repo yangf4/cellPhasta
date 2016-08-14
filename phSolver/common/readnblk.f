@@ -66,6 +66,7 @@ c
       character*64 temp1
       type(c_ptr) :: handle
       character(len=1024) :: dataInt, dataDbl
+      integer, target, allocatable :: itemp(:)
       dataInt = c_char_'integer'//c_null_char
       dataDbl = c_char_'double'//c_null_char
 c
@@ -148,6 +149,16 @@ c
       call phio_readheader(fhandle,
      & c_char_'number of shape functions' // char(0),
      & c_loc(ntopsh),ione, dataInt, iotype)
+
+      write(fname2,"('material type interior')")
+      call phio_readheader(fhandle, fname2 // char(0),
+     & c_loc(intfromfile(1)), 1, dataInt, iotype)
+      allocate(mattype_interior(intfromfile(1)))
+      allocate(itemp(intfromfile(1)))
+      call phio_readdatablock(fhandle,fname2 // char(0),
+     & c_loc(itemp), intfromfile(1), dataInt, iotype)
+      mattype_interior(:) = itemp(:)
+      deallocate(itemp)
 c
 c.... calculate the maximum number of boundary element nodes
 c     
@@ -174,12 +185,14 @@ c
       ndof=ndof+nsclr           ! number of sclr transport equations to solve
 c      
       if (iALE .eq. 2) then     ! Mesh-elastic is ON
-         nelas  = nsd              ! FOR mesh-elastic 
-         ndofBC = ndof + I3nsd     ! dimension of BC array
+         nelas   = nsd              ! FOR mesh-elastic 
+         ndofBC  = ndof + I3nsd     ! dimension of BC array
      &          + nelas + I3nsd    ! add nelas for mesh-elastic solve
+         ndofBC2 = 3+2+4+7+8    ! (assuming 4 scalars to be ON) and 8 is for ec11 ec12 ec13 em1 ec21 ec22 ec23 em2 
       else
-         nelas  = 0
-         ndofBC = ndof + I3nsd     ! dimension of BC array
+         nelas   = 0
+         ndofBC  = ndof + I3nsd     ! dimension of BC array
+         ndofBC2 = ndof + 7 
       endif
 c
       ndiBCB = 2                ! dimension of iBCB array
@@ -254,33 +267,6 @@ c
      & c_char_'co-ordinates' // char(0),
      & c_loc(xread),ixsiz, dataDbl, iotype)
       point2x = xread
-
-c..............................for Duct
-      if(istretchOutlet.eq.1)then
-         
-c...geometry6
-        if(iDuctgeometryType .eq. 6) then
-          xmaxn = 1.276
-          xmaxo = 0.848
-          xmin  = 0.42
-c...geometry8
-        elseif(iDuctgeometryType .eq. 8)then
-          xmaxn=1.6*4.5*0.0254+0.85*1.5
-          xmaxo=1.6*4.5*0.0254+0.85*1.0
-          xmin =1.6*4.5*0.0254+0.85*0.5
-        endif
-c...
-        alpha=(xmaxn-xmaxo)/(xmaxo-xmin)**2
-        where (point2x(:,1) .ge. xmin)
-c..... N=# of current elements from .42 to exit(~40)
-c..... (x_mx-x_mn)/N=.025
-c..... alpha=3    3*.025=.075
-           point2x(:,1)=point2x(:,1)+
-     &     alpha*(point2x(:,1)-xmin)**2
-c..... ftn to stretch x at exit
-        endwhere
-      endif
-
 c
 c.... read in and block out the connectivity
 c
@@ -336,12 +322,16 @@ c
      & c_loc(intfromfile),ione, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
-         allocate( BCinp(numpbc,24) )
+c         if(intfromfile(1).ne.(ndof+7)*numpbc) then
+c           warning='WARNING more data in BCinp than needed: keeping 1st'
+c           write(*,*) warning, ndof+7, numpbc,intfromfile(1),(ndof+7)*numpbc
+c         endif
+         allocate( BCinp(numpbc,ndofBC2) )
          nsecondrank=intfromfile(1)/numpbc
          allocate( BCinpread(numpbc,nsecondrank) )
          iBCinpsiz=intfromfile(1)
       else
-         allocate( BCinp(1,24) )
+         allocate( BCinp(1,ndofBC2) )
          allocate( BCinpread(0,0) ) !dummy
          iBCinpsiz=intfromfile(1)
       endif
@@ -351,7 +341,7 @@ c
      & c_loc(BCinpread), iBCinpsiz, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
-         BCinp(:,1:(24))=BCinpread(:,1:(24))
+         BCinp(:,1:ndofBC2)=BCinpread(:,1:ndofBC2)
       else  ! sometimes a partition has no BC's
          deallocate(BCinpread)
          BCinp=0

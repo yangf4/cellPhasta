@@ -23,8 +23,8 @@ c
       include "common.h"
         
 c
-        dimension BCtmp(nshg,24),    iBC(nshg),
-     &            BC(nshg,ndofBC),tmpbc(4)
+        dimension BCtmp(nshg,ndofBC2),    iBC(nshg),
+     &            BC(nshg,ndofBC),        tmpbc(4)
 c
         dimension tmp(nshg)
 c
@@ -238,15 +238,15 @@ c
 c.... end
 c
 
-
-
+c.... if we have the mesh elastic solver
+      if (iALE .eq. 2) then 
 c
 c----------------Re-organize Mesh Elastic Velocities-----------------
 c
-       elas3 = ndof + 2
-       elas4 = ndof + 3
-       elas5 = ndof + 4
-       elas6 = ndof + 5
+        elas3 = ndof + 2
+        elas4 = ndof + 3
+        elas5 = ndof + 4
+        elas6 = ndof + 5
 c
 c.... if the velocity in the x1-direction is specified
 c
@@ -432,6 +432,7 @@ c
           BC(:,elas5) = BCtmp(:,20) * BCtmp(:,19)
         endwhere
         endif
+      endif ! end if iALE = 2
 c----------------End Mesh Elastic Velocity---------------
 c
 c.... end
