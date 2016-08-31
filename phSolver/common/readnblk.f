@@ -150,15 +150,15 @@ c
      & c_char_'number of shape functions' // char(0),
      & c_loc(ntopsh),ione, dataInt, iotype)
 
-      write(fname2,"('material type interior')")
-      call phio_readheader(fhandle, fname2 // char(0),
-     & c_loc(intfromfile(1)), 1, dataInt, iotype)
-      allocate(mattype_interior(intfromfile(1)))
-      allocate(itemp(intfromfile(1)))
-      call phio_readdatablock(fhandle,fname2 // char(0),
-     & c_loc(itemp), intfromfile(1), dataInt, iotype)
-      mattype_interior(:) = itemp(:)
-      deallocate(itemp)
+c      write(fname2,"('material type interior')")
+c      call phio_readheader(fhandle, fname2 // char(0),
+c     & c_loc(intfromfile(1)), 1, dataInt, iotype)
+c      allocate(mattype_interior(intfromfile(1)))
+c      allocate(itemp(intfromfile(1)))
+c      call phio_readdatablock(fhandle,fname2 // char(0),
+c     & c_loc(itemp), intfromfile(1), dataInt, iotype)
+c      mattype_interior(:) = itemp(:)
+c      deallocate(itemp)
 c
 c.... calculate the maximum number of boundary element nodes
 c     

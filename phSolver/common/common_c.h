@@ -92,8 +92,7 @@
 #define inv1024sq 9.5367431640625e-7
 
 #define ieos_ideal_gas 1
-#define ieos_ideal_gas_2 2
-#define ieos_liquid_1  3
+#define ieos_liquid_1  2
 
 #define idg_no_ramp 1
 #define idg_linear_ramp 2
@@ -233,13 +232,13 @@ extern "C" {
 
   extern struct { 
     double flxID[MAXSURF+1][10] ;
+    double flxIDsclr[MAXSURF][4];
     double Force[MAXSURF][3];
     double PresFor[MAXSURF][3];
     double HFlux[MAXSURF];
     int nsrfCM;
     int nsrflist[MAXSURF+1];
     int isrfIM;
-    double flxIDsclr[MAXSURF][4];
     int irankfilesforce[MAXSURF+1];
   } aerfrc ;
 
@@ -279,6 +278,7 @@ extern "C" {
     int ncorpsize;
     int iownnodes;
     int usingpetsc;
+    int melasModify; 
   } conpar ;
  
 /*chen Sep 25 2009  Flow Control Parameters*/

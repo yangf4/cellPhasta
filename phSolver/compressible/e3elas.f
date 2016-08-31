@@ -49,17 +49,28 @@ c        if (associated(dxidxelas)) deallocate(dxidxelas)
 c
 c.... initial setup
 c
-c.... modify Poisson Ratio
-        youngMod(:) = datelas(1,1)
-c      if (meshqMeasure .eq. 2) then
-        poisnRat(:) = 0.5 * (1.0 - 1.0 / meshq(:))
-c      else
-c        poisnRat(:) = datelas(1,2)
-c      endif
+c.... modify Young's Modulus and Poisson Ratio
+c
+        if (melasModify .eq. 0) then
+          youngMod(:) = datelas(1,1)
+          poisnRat(:) = datelas(1,2)
+
+        elseif (melasModify .eq. 1) then
+          youngMod(:) = datelas(1,1) / meshV(:)
+          poisnRat(:) = datelas(1,2)
+
+        elseif (melasModify .eq. 2) then
+          youngMod(:) = datelas(1,1)
+          poisnRat(:) = 0.5 * (1.0 - 1.0 / meshq(:))
+
+        elseif (melasModify .eq. 3) then
+          youngMod(:) = datelas(1,1) / meshV(:)
+          poisnRat(:) = 0.5 * (1.0 - 1.0 / meshq(:)) / meshV(:)
+        endif
 c
         lamda(:) = youngMod(:) * poisnRat(:) / 
-     &         (1.0+poisnRat(:)) / (1.0-2.0*poisnRat(:)) / meshV(:) ! volume
-        mu(:)    = youngMod(:) / 2.0 / (1.0+poisnRat(:)) / meshV(:) ! volume
+     &         (1.0+poisnRat(:)) / (1.0-2.0*poisnRat(:))
+        mu(:)    = youngMod(:) / 2.0 / (1.0+poisnRat(:))
 c
 c.... loop through the integration points
 c

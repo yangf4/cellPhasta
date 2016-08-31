@@ -15,15 +15,12 @@ c
      &            tetVolm(npro),              tetSumEdge(npro),
      &            tetEdgeLength(npro, 6),     specArea(npro),
      &            surfArea(npro, 4) 
-        integer meshqMeasure
 c
 c---------------------------------------------------------
 c          
        call localx(x,      xl,     ien,    nsd,    'gather  ')
-c... hardcoded
-       meshqMeasure = 2
-c... hardcoded
-       if ((meshqMeasure .ge. 1) .and. (meshqMeasure .le. 2)) then
+
+       if ((melasModify .ge. 1) .and. (melasModify .le. 3)) then
        tetEdge(:,1,:) = xl(:,1,:) - xl(:,4,:)
        tetEdge(:,2,:) = xl(:,2,:) - xl(:,4,:)
        tetEdge(:,3,:) = xl(:,3,:) - xl(:,4,:)
@@ -41,7 +38,7 @@ c
 c
 c... if mesaure method = mean ratio
 c
-       if (meshqMeasure .eq. 1) then
+       if (melasModify .eq. 1) then
          tetSumEdge(:) = tetEdge(:,1,1) * tetEdge(:,1,1)
      &                 + tetEdge(:,1,2) * tetEdge(:,1,2)
      &                 + tetEdge(:,1,3) * tetEdge(:,1,3)
@@ -71,12 +68,12 @@ c
             endif
          enddo
 c
-       endif ! end meshqMeasure = 1, mean ratio
+       endif ! end melasModify = 1, mean ratio
 c
-c... if meshq measure method = aspect ratio beta
+c... if melas modify method = aspect ratio beta
 c...  aspect ratio = CR/(3*IR) 
 c
-       if (meshqMeasure .eq. 2) then
+       if (melasModify .ge. 2) then
          tetEdgeLength(:,:) = sqrt(
      &                        tetEdge(:,:,1)*tetEdge(:,:,1)   
      &                      + tetEdge(:,:,2)*tetEdge(:,:,2) 
@@ -94,31 +91,31 @@ c
      &                      + tetEdgeLength(:,2)*tetEdgeLength(:,4)
      &                      - tetEdgeLength(:,3)*tetEdgeLength(:,6) ))
          surfArea(:,1) = 0.25 * sqrt(
-     &       (tetEdgeLength(:,1)+tetEdgeLength(:,2)+tetEdgeLength(:,3))
-     &     * (tetEdgeLength(:,1)+tetEdgeLength(:,2)-tetEdgeLength(:,3))
-     &     * (tetEdgeLength(:,1)-tetEdgeLength(:,2)+tetEdgeLength(:,3))
-     &     *(-tetEdgeLength(:,1)+tetEdgeLength(:,2)+tetEdgeLength(:,3)))
+     &       (tetEdgeLength(:,4)+tetEdgeLength(:,5)+tetEdgeLength(:,6))
+     &     * (tetEdgeLength(:,4)+tetEdgeLength(:,5)-tetEdgeLength(:,6))
+     &     * (tetEdgeLength(:,4)-tetEdgeLength(:,5)+tetEdgeLength(:,6))
+     &     *(-tetEdgeLength(:,4)+tetEdgeLength(:,5)+tetEdgeLength(:,6)))
          surfArea(:,2) = 0.25 * sqrt(
-     &       (tetEdgeLength(:,1)+tetEdgeLength(:,4)+tetEdgeLength(:,6))
-     &     * (tetEdgeLength(:,1)+tetEdgeLength(:,4)-tetEdgeLength(:,6))
-     &     * (tetEdgeLength(:,1)-tetEdgeLength(:,4)+tetEdgeLength(:,6))
-     &     *(-tetEdgeLength(:,1)+tetEdgeLength(:,4)+tetEdgeLength(:,6)))
+     &       (tetEdgeLength(:,1)+tetEdgeLength(:,2)+tetEdgeLength(:,6))
+     &     * (tetEdgeLength(:,1)+tetEdgeLength(:,2)-tetEdgeLength(:,6))
+     &     * (tetEdgeLength(:,1)-tetEdgeLength(:,2)+tetEdgeLength(:,6))
+     &     *(-tetEdgeLength(:,1)+tetEdgeLength(:,2)+tetEdgeLength(:,6)))
          surfArea(:,3) = 0.25 * sqrt(
-     &       (tetEdgeLength(:,2)+tetEdgeLength(:,5)+tetEdgeLength(:,6))
-     &     * (tetEdgeLength(:,2)+tetEdgeLength(:,5)-tetEdgeLength(:,6))
-     &     * (tetEdgeLength(:,2)-tetEdgeLength(:,5)+tetEdgeLength(:,6))
-     &     *(-tetEdgeLength(:,2)+tetEdgeLength(:,5)+tetEdgeLength(:,6)))
+     &       (tetEdgeLength(:,2)+tetEdgeLength(:,5)+tetEdgeLength(:,3))
+     &     * (tetEdgeLength(:,2)+tetEdgeLength(:,5)-tetEdgeLength(:,3))
+     &     * (tetEdgeLength(:,2)-tetEdgeLength(:,5)+tetEdgeLength(:,3))
+     &     *(-tetEdgeLength(:,2)+tetEdgeLength(:,5)+tetEdgeLength(:,3)))
          surfArea(:,4) = 0.25 * sqrt(
-     &       (tetEdgeLength(:,3)+tetEdgeLength(:,4)+tetEdgeLength(:,5))
-     &     * (tetEdgeLength(:,3)+tetEdgeLength(:,4)-tetEdgeLength(:,5))
-     &     * (tetEdgeLength(:,3)-tetEdgeLength(:,4)+tetEdgeLength(:,5))
-     &     *(-tetEdgeLength(:,3)+tetEdgeLength(:,4)+tetEdgeLength(:,5)))
+     &       (tetEdgeLength(:,3)+tetEdgeLength(:,4)+tetEdgeLength(:,1))
+     &     * (tetEdgeLength(:,3)+tetEdgeLength(:,4)-tetEdgeLength(:,1))
+     &     * (tetEdgeLength(:,3)-tetEdgeLength(:,4)+tetEdgeLength(:,1))
+     &     *(-tetEdgeLength(:,3)+tetEdgeLength(:,4)+tetEdgeLength(:,1)))
 c
          meshq(:) = specArea(:) * (surfArea(:,1)+surfArea(:,2)
-     &     +surfArea(:,3)+surfArea(:,4)) /288.0 /tetVolm(:) /tetVolm(:)
+     &     +surfArea(:,3)+surfArea(:,4)) /216.0 /tetVolm(:) /tetVolm(:)
 c
-       endif ! end meshqMeasure = 2, aspect ratio = CR/(3*IR) 
-       endif ! end if meshqMeasure = 1 or 2
+       endif ! end melasModify = 2 or 3, aspect ratio = CR/(3*IR) 
+       endif ! end if melasModify = 1 or 2 or 3
 c
 c.... return
 c

@@ -135,11 +135,10 @@ c flxID(numfluxes,nIDs+1)
 c numfluxes = area, mass, fx, fy, fz, heat, scalar_flux_{1,2,3,4}
 c nIDs currently set to MAXSURF, each surface has its own
 c
-        common /aerfrc/ flxID(10,0:MAXSURF), Force(3,MAXSURF),
-     &                  PresFor(3, MAXSURF),
+        common /aerfrc/ flxID(10,0:MAXSURF), flxIDsclr(4,MAXSURF),
+     &                  Force(3,MAXSURF),    PresFor(3, MAXSURF),
      &                  HFlux(MAXSURF),    nsrfCM,
      &                  nsrflist(0:MAXSURF), isrfIM,
-     &                  flxIDsclr(4,MAXSURF),
      &                  irankfilesforce(0:MAXSURF)
 c
         common /astore/ a(100000)
@@ -165,7 +164,7 @@ c
      &                  ndofelas, nshg,   nnz,    istop,  nflow,  nelas, 
      &                  nnz_tot,  idtn,
      &                  ncorpsize, iownnodes, usingpetsc,
-     &                  meshqMeasure
+     &                  melasModify
 
 c...........................................................................
         common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial
@@ -394,6 +393,7 @@ c nshg          : global number of shape functions (degrees of freedom,
 c                 or equations). Computed from the specified p-order,
 c                 the number of edges, and the number of faces (in the
 c                 entire mesh)
+c melasModify   : mesh elastic porperty modifying method ID
 c
 c----------------------------------------------------------------------
 c

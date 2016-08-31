@@ -247,6 +247,20 @@ int input_fform(phSolver::Input& inp)
     }
 
     conpar.iMsCsNb = inp.GetValue("Mesh Hardcoded Case Number");
+
+    if ((string)inp.GetValue("Mesh Elastic Property Modify") == "None" ) {
+      conpar.melasModify = 0; 
+    } else if ((string)inp.GetValue("Mesh Elastic Property Modify") == "Jacobian" ) {
+      conpar.melasModify = 1;
+    } else if ((string)inp.GetValue("Mesh Elastic Property Modify") == "Aspect Ratio" ) {
+      conpar.melasModify = 2;
+    } else if ((string)inp.GetValue("Mesh Elastic Property Modify") == "Combine" ) {
+      conpar.melasModify = 3;
+    } else {
+      cout << "Mesh Elastic Property Modify : Only Legal Values ( None, Jacobian, Aspect Ratio, Combine )";
+      cout << endl;
+      exit(1);
+    }
  
     if ((string)inp.GetValue("Turbulence Model") == "No-Model" ) {
       turbvari.irans = 0;
