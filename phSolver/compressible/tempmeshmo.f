@@ -698,21 +698,21 @@ c
      &        (abs(x(i,3)) .lt. 12e-6) ) then
 c            if ( lstep. eq. 1 )
 c     &        write(*,*) myrank, i,  x(i,1), x(i,2), x(i,3)
-            if ( (lstep .ge. 300) .and. (lstep .lt. 435) ) then
+            if ( (lstep .ge. 300) .and. (lstep .lt. 440) ) then
               BC(i,1)   = loc(lstep) / Delt(1)
               BC(i,2)   = zero
               BC(i,3)   = zero
-            else if ( lstep .ge. 435 ) then
+            else if ( lstep .ge. 440 ) then
               if ( x(i,1) .ge. dyn_org ) then            
-                disp(i,1) = -0.095 * (x(i,1) - dyn_org) 
+                disp(i,1) = -0.1737 * (x(i,1) - dyn_org) 
 c                disp(i,1) = -0.0375 * (x(i,1) - dyn_org) 
               else 
                 disp(i,1) = 0.0 
 c                disp(i,1) = -0.0125 * (x(i,1) - dyn_org) 
               endif
-              disp(i,2) = 0.01728 *  x(i,2)
+              disp(i,2) = 0.02489 *  x(i,2)
               if ( x(i,3) .ge. 0.0 ) then
-                disp(i,3) = 0.005453 * x(i,3)
+                disp(i,3) = 0.06850 * x(i,3)
 c                disp(i,3) = 0.01911 * x(i,3)
               else
                 disp(i,3) = 0.0
